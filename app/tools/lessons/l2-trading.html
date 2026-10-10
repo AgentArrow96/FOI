@@ -1,0 +1,85 @@
+<div class="lesson-intro"><span class="lesson-kicker">THE BIG STORY</span>
+    <h3>You want to sell 100 shares. Who is on the other side?</h3>
+    <p>In a <strong>broker market</strong>, a broker finds another investor and the two of you trade with each other. In a <strong>dealer market</strong>, a market maker <em>is</em> the other side: it buys from you and later sells to someone else. The cleanest summary: <strong>broker = agent, dealer = principal</strong>.</p>
+</div>
+{{vis:l2_broker_dealer}}
+<div class="compare-box">
+    <div class="compare-side">
+        <h4>Broker market</h4>
+        <ul>
+            <li>Buyer and seller are brought together and transact with each other</li>
+            <li>The broker matches; it carries no inventory</li>
+            <li>Securities exchanges such as the NYSE</li>
+        </ul>
+    </div>
+    <div class="compare-side highlight">
+        <h4>Dealer market</h4>
+        <ul>
+            <li>A market maker stands in the middle and trades on its own account</li>
+            <li>It carries <b>inventory risk</b> and supplies liquidity</li>
+            <li>No central trading floor needed: Nasdaq and the OTC market</li>
+        </ul>
+    </div>
+</div>
+<div class="teach-panel" style="margin-top:18px">
+    <h3>Bid and ask: read the quote from the dealer's side</h3>
+    <p>Quote: 99.50 / 100.00.</p>
+    <div class="concept-tabs"><button class="concept-tab active" onclick="switchConcept('g-l2trd-q','bid',this)">Bid</button><button class="concept-tab" onclick="switchConcept('g-l2trd-q','ask',this)">Ask</button><button class="concept-tab" onclick="switchConcept('g-l2trd-q','spread',this)">Spread</button></div>
+    <div class="concept-panel active" id="g-l2trd-q-bid">
+        <h3>Bid = the highest price the dealer offers to BUY</h3>
+        <div class="definition">If <b>you sell</b>, the dealer buys from you at the bid: you receive 99.50.</div>
+    </div>
+    <div class="concept-panel" id="g-l2trd-q-ask">
+        <h3>Ask = the lowest price the dealer will SELL at</h3>
+        <div class="definition">If <b>you buy</b>, the dealer sells to you at the ask: you pay 100.00.</div>
+        <p>Common mistake: "ask = what the investor asks". No: the dealer asks.</p>
+    </div>
+    <div class="concept-panel" id="g-l2trd-q-spread">
+        <h3>Bid–ask spread = ask − bid = 0.50</h3>
+        <div class="definition">Bid &lt; ask, always.</div>
+        <p>The spread compensates the dealer for providing liquidity and carrying inventory risk. Buying and immediately reselling at unchanged quotes costs you the spread, so it is a transaction cost.</p>
+    </div>
+</div>
+<div class="card" style="margin-top:18px">
+    <h3>The trading landscape</h3>
+    <div class="why-grid">
+        <div class="why-card"><strong>Exchanges</strong><p>NYSE (largest, strictest listing), NYSE Amex, regional, options and futures exchanges.</p></div>
+        <div class="why-card"><strong>Nasdaq and OTC</strong><p>Dealer networks connected electronically; OTC Bulletin Board and Pink Sheets list smaller, riskier firms.</p></div>
+        <div class="why-card"><strong>Third market</strong><p>Institutions trade exchange-listed stocks through market makers that are <b>not</b> exchange members, at lower cost.</p></div>
+        <div class="why-card"><strong>Fourth market</strong><p>Institutions trade <b>directly with each other</b> through ECNs, bypassing market makers.</p></div>
+        <div class="why-card"><strong>Why bypass?</strong><p>Cost. 0.10% on a RM500 million trade is RM500,000.</p></div>
+        <div class="why-card"><strong>A market is a mechanism</strong><p>Not necessarily a place: once orders meet electronically, no floor is needed.</p></div>
+    </div>
+</div>
+{{fig:l2_markets}}
+<div class="scenario-grid">
+    <div class="scenario-card"><span class="scenario-label">APPLY</span>
+        <h4>A dealer quotes RM9.80 – RM10.00</h4>
+        <p>What do you receive if you sell, and pay if you buy?</p><button onclick="revealTeach('r-l2trd-1')">Reveal logic</button>
+        <div class="scenario-answer" id="r-l2trd-1">Sell: RM9.80 (the bid). Buy: RM10.00 (the ask). The RM0.20 spread is the dealer's compensation and your round-trip cost.</div>
+    </div>
+    <div class="scenario-card"><span class="scenario-label">EVALUATE</span>
+        <h4>"A dealer is basically another name for a broker."</h4>
+        <p>Agree or disagree?</p><button onclick="revealTeach('r-l2trd-2')">Reveal logic</button>
+        <div class="scenario-answer" id="r-l2trd-2">Wrong. A broker facilitates a trade between two parties; a dealer is itself a counterparty. That difference drives inventory risk, liquidity provision and bid–ask quotes.</div>
+    </div>
+    <div class="scenario-card"><span class="scenario-label">CLASSIFY</span>
+        <h4>Two pension funds trade a block of shares directly via an ECN</h4>
+        <p>Third or fourth market?</p><button onclick="revealTeach('r-l2trd-3')">Reveal logic</button>
+        <div class="scenario-answer" id="r-l2trd-3">Fourth market: institutions deal directly with each other, bypassing market makers. If a non-member market maker were involved, it would be the third market.</div>
+    </div>
+</div>
+<div class="exam-lens">
+    <h3>Exam lens</h3>
+    <ul>
+        <li>Broker = agent (matches); dealer = principal (trades, holds inventory).</li>
+        <li>Bid = dealer buys; ask = dealer sells; bid &lt; ask.</li>
+        <li>Third market: non-member market makers. Fourth market: institutions direct, often via ECNs.</li>
+    </ul>
+</div>
+<div class="mini-check">
+    <h4>Quick check</h4>
+    <p>You buy 1,000 shares at the ask of RM5.05 and immediately sell them at the bid of RM5.00. What did the round trip cost you, ignoring commissions?</p>
+    <button onclick="revealTeach('r-l2trd-4')">Reveal logic</button>
+    <div class="micro-answer" id="r-l2trd-4">1,000 × (5.05 − 5.00) = RM50: the bid–ask spread.</div>
+</div>

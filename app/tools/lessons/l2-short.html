@@ -1,0 +1,77 @@
+<div class="lesson-intro"><span class="lesson-kicker">THE BIG STORY</span>
+    <h3>Sell high first, buy low later</h3>
+    <p>A <strong>short seller</strong> sells shares they do not own, borrowed through a broker from other investors' street-name holdings, hoping to buy them back more cheaply and return them. It reverses the usual order: <strong>borrow → sell → buy back → return</strong>. It looks like the mirror image of a long purchase, but the risk is not symmetrical.</p>
+</div>
+{{vis:l2_short_steps}}
+<div class="teach-panel">
+    <h3>The chapter's example</h3>
+    <div class="concept-tabs"><button class="concept-tab active" onclick="switchConcept('g-l2sh-ex','fall',this)">Price falls to RM30</button><button class="concept-tab" onclick="switchConcept('g-l2sh-ex','rise',this)">Price rises</button><button class="concept-tab" onclick="switchConcept('g-l2sh-ex','margin',this)">Short-sale margin</button></div>
+    <div class="concept-panel active" id="g-l2sh-ex-fall">
+        <h3>Profit = sale proceeds − cost to buy back</h3>
+        <div class="definition">Borrow and sell 100 shares at RM50: +RM5,000. Buy back at RM30: −RM3,000. Return the shares. Profit before costs: <b>RM2,000</b>.</div>
+    </div>
+    <div class="concept-panel" id="g-l2sh-ex-rise">
+        <h3>The loss has no ceiling</h3>
+        <div class="definition">At RM100 the loss is RM50 a share; at RM200 it is RM150. There is no fixed upper limit to the price.</div>
+        <p>The maximum <b>gain</b> is limited (the price cannot fall below zero: RM50 a share here), but the potential <b>loss</b> is theoretically unlimited. And you still owe the shares while the price runs against you.</p>
+    </div>
+    <div class="concept-panel" id="g-l2sh-ex-margin">
+        <h3>Short sales also need margin</h3>
+        <div class="definition">Account equity = funds held by the broker − current cost to buy back the shares. Margin = equity / current buy-back cost.</div>
+        <p>Table 2.6: proceeds RM5,000 + RM2,500 deposit = RM7,500 held. At RM70 the buy-back costs RM7,000, equity is RM500 and margin is 500 / 7,000 ≈ <b>7.1%</b>, below 30%: margin call.</p>
+    </div>
+</div>
+{{vis:l2_short}}
+<div class="compare-box">
+    <div class="compare-side highlight">
+        <h4>Advantage</h4>
+        <ul><li>A chance to profit when a stock's price declines</li></ul>
+    </div>
+    <div class="compare-side">
+        <h4>Disadvantages</h4>
+        <ul><li><b>Limited return</b>: the price can't go below zero</li><li><b>Unlimited risk</b>: the price can rise without limit</li><li>Must still buy back and return the borrowed shares</li><li>Short sellers do not earn dividends</li></ul>
+    </div>
+</div>
+<div class="card" style="margin-top:18px">
+    <h3>Long, margin and short compared</h3>
+    <table class="comparison-table">
+        <tr><th>Feature</th><th>Long (cash)</th><th>Margin purchase</th><th>Short sale</th></tr>
+        <tr><td>Wins when the price</td><td>rises</td><td>rises (magnified)</td><td>falls</td></tr>
+        <tr><td>Borrow money?</td><td>no</td><td>yes</td><td>not necessarily</td></tr>
+        <tr><td>Borrow shares?</td><td>no</td><td>no</td><td>yes</td></tr>
+        <tr><td>Worst price-related loss</td><td>the amount invested</td><td>can exceed initial equity</td><td>theoretically unlimited</td></tr>
+        <tr><td>Obligation</td><td>none</td><td>repay the loan</td><td>return the shares</td></tr>
+    </table>
+</div>
+{{fig:l2_short_margin}}
+<div class="scenario-grid">
+    <div class="scenario-card"><span class="scenario-label">CALCULATE</span>
+        <h4>Short 200 shares at RM40; cover at RM34</h4>
+        <p>Profit before costs?</p><button onclick="revealTeach('r-l2sh-1')">Reveal logic</button>
+        <div class="scenario-answer" id="r-l2sh-1">200 × (40 − 34) = <b>RM1,200</b>.</div>
+    </div>
+    <div class="scenario-card"><span class="scenario-label">ANALYSE</span>
+        <h4>The same 20% price move, three investors</h4>
+        <p>Cash long, 50%-margin long and short, ignoring costs.</p><button onclick="revealTeach('r-l2sh-2')">Reveal logic</button>
+        <div class="scenario-answer" id="r-l2sh-2">If the price rises 20%: cash long +20%, margin long about +40% on equity, short loses. If it falls 20%, the signs flip. Market direction + position structure = investor outcome.</div>
+    </div>
+    <div class="scenario-card"><span class="scenario-label">TRAP</span>
+        <h4>"Shorting is just the mirror image of buying, so the risks are the same."</h4>
+        <p>True or false?</p><button onclick="revealTeach('r-l2sh-3')">Reveal logic</button>
+        <div class="scenario-answer" id="r-l2sh-3">False. A long position can lose at most what was invested (the price stops at zero); a short position's loss has no ceiling because the price can keep rising.</div>
+    </div>
+</div>
+<div class="exam-lens">
+    <h3>Exam lens</h3>
+    <ul>
+        <li>Sequence: borrow → sell → buy back → return. Profit = (sale price − buy-back price) × shares.</li>
+        <li>Gain capped, loss unlimited: the asymmetry the chapter stresses.</li>
+        <li>In a short account a <b>rising</b> price shrinks equity and can trigger a margin call.</li>
+    </ul>
+</div>
+<div class="mini-check">
+    <h4>Quick check</h4>
+    <p>Why can a long position never lose more than 100% of the cash invested, but a short position can?</p>
+    <button onclick="revealTeach('r-l2sh-4')">Reveal logic</button>
+    <div class="micro-answer" id="r-l2sh-4">A share price cannot fall below zero, which caps the long loss. A short seller must buy back at whatever the price becomes, and there is no upper limit to a price.</div>
+</div>

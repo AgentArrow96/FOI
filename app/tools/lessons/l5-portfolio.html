@@ -1,0 +1,81 @@
+<div class="lesson-intro"><span class="lesson-kicker">THE BIG STORY</span>
+    <h3>Five Malaysian bank stocks: five holdings, one bet</h3>
+    <p>All five can be hit by the same weaker credit conditions, rising defaults or rate changes. Owning several securities is not the same as being diversified. Chapter 5 changes the question from "which investment is best?" to <strong>which combination of investments gives the best risk-return relationship for the whole portfolio?</strong> That shift is the foundation of Modern Portfolio Theory (MPT).</p>
+</div>
+<div class="compare-box">
+    <div class="compare-side">
+        <h4>Growth-oriented portfolio</h4>
+        <p>Primary objective: long-term price appreciation.</p>
+    </div>
+    <div class="compare-side highlight">
+        <h4>Income-oriented portfolio</h4>
+        <p>Primary objective: regular dividend and interest income.</p>
+    </div>
+</div>
+<div class="analogy-box" style="margin-top:18px">
+    <h3>The ultimate goal: an efficient portfolio</h3>
+    <p>A portfolio that provides the <b>highest return for a given level of risk</b> (equivalently, the lowest risk for a given return). Portfolio B (10% return, 10% σ) dominates A (8%, 10%). B versus C (12%, 20%) is a matter of risk preference: neither dominates.</p>
+    <span class="formula">An efficient portfolio need not have the highest absolute return</span>
+</div>
+<div class="teach-panel" style="margin-top:18px">
+    <h3>Return is easy; risk is not</h3>
+    <div class="concept-tabs"><button class="concept-tab active" onclick="switchConcept('g-l5port-m','ret',this)">Portfolio return</button><button class="concept-tab" onclick="switchConcept('g-l5port-m','risk',this)">Portfolio risk</button><button class="concept-tab" onclick="switchConcept('g-l5port-m','terms',this)">The two terms</button></div>
+    <div class="concept-panel active" id="g-l5port-m-ret">
+        <h3>A weighted average</h3>
+        <div class="definition">$E(R_p) = \sum w_i E(R_i)$, with the weights summing to 1.</div>
+        <p>50% at 12%, 30% at 8%, 20% at 5%: 6% + 2.4% + 1% = <b>9.4%</b>. Weights reveal your real exposure: 90% in one stock dominates however many other names you hold.</p>
+    </div>
+    <div class="concept-panel" id="g-l5port-m-risk">
+        <h3>Not a weighted average</h3>
+        <div class="definition">$\sigma_p = \sqrt{w_A^2\sigma_A^2 + w_B^2\sigma_B^2 + 2w_Aw_B\sigma_A\sigma_B\rho_{AB}}$</div>
+        <p>With σ<sub>A</sub> = 20%, σ<sub>B</sub> = 10% and 50/50 weights, "0.5 × 20% + 0.5 × 10% = 15%" is right only if the two are perfectly positively correlated (ρ = +1).</p>
+    </div>
+    <div class="concept-panel" id="g-l5port-m-terms">
+        <h3>Individual risk plus co-movement</h3>
+        <div class="definition">$w_A^2\sigma_A^2 + w_B^2\sigma_B^2$ = each asset's own contribution. $2w_Aw_B\sigma_A\sigma_B\rho_{AB}$ = how their movements reinforce or offset.</div>
+        <p>ρ &gt; 0 adds to portfolio variance; ρ &lt; 0 subtracts from it. That second term is the mathematical reason diversification works.</p>
+    </div>
+</div>
+{{vis:l5_sigma3d}}
+<div class="card">
+    <h3>Adding a riskier asset can lower risk: IBM and Celgene</h3>
+    <table class="comparison-table">
+        <tr><th>Investment</th><th>Average return</th><th>Standard deviation</th></tr>
+        <tr><td>IBM</td><td>10.4%</td><td>28.6%</td></tr>
+        <tr><td>Celgene</td><td>32.1%</td><td>58.3%</td></tr>
+        <tr><td>86% IBM, 14% Celgene</td><td>13.5%</td><td><b>25.3%</b></td></tr>
+    </table>
+    <p class="card-note">The portfolio is less volatile than IBM alone, despite adding a stock twice as volatile. Ask not "is Celgene risky?" but "how does adding Celgene change the risk of what I already own?"</p>
+</div>
+{{fig:l5_ibm}}
+<div class="scenario-grid">
+    <div class="scenario-card"><span class="scenario-label">CALCULATE</span>
+        <h4>60% in A (E(R) 15%), 40% in B (E(R) 5%)</h4>
+        <p>Portfolio expected return?</p><button onclick="revealTeach('r-l5port-1')">Reveal logic</button>
+        <div class="scenario-answer" id="r-l5port-1">0.6 × 15% + 0.4 × 5% = 9% + 2% = <b>11%</b>.</div>
+    </div>
+    <div class="scenario-card"><span class="scenario-label">CALCULATE</span>
+        <h4>Equal weights, σ 20% and 10%, ρ = 0</h4>
+        <p>Portfolio σ?</p><button onclick="revealTeach('r-l5port-2')">Reveal logic</button>
+        <div class="scenario-answer" id="r-l5port-2">√(0.25 × 0.04 + 0.25 × 0.01 + 0) = √0.0125 ≈ <b>11.18%</b>, well below the 15% weighted average.</div>
+    </div>
+    <div class="scenario-card"><span class="scenario-label">TRAP</span>
+        <h4>"I own 40 stocks, so I'm diversified."</h4>
+        <p>All 40 are banks.</p><button onclick="revealTeach('r-l5port-3')">Reveal logic</button>
+        <div class="scenario-answer" id="r-l5port-3">Not necessarily. Some single-bank risk is diluted, but the portfolio stays heavily exposed to common industry and economic shocks. Number of assets ≠ quality of diversification.</div>
+    </div>
+</div>
+<div class="exam-lens">
+    <h3>Exam lens</h3>
+    <ul>
+        <li>Portfolio return and portfolio beta are weighted averages; portfolio standard deviation generally is not.</li>
+        <li>σ<sub>p</sub> depends on weights, individual σs and correlations.</li>
+        <li>Efficient = highest return for a given risk; dominance decides between portfolios with equal risk or equal return.</li>
+    </ul>
+</div>
+<div class="mini-check">
+    <h4>Quick check</h4>
+    <p>Two portfolios both have σ = 10%; one expects 8% and the other 10%. Which is efficient, and why?</p>
+    <button onclick="revealTeach('r-l5port-4')">Reveal logic</button>
+    <div class="micro-answer" id="r-l5port-4">The 10% portfolio: same risk, higher expected return, so it dominates. There is no reason to hold the 8% one if these measures capture all relevant differences.</div>
+</div>

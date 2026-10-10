@@ -1,0 +1,74 @@
+<div class="lesson-intro"><span class="lesson-kicker">THE BIG STORY</span>
+    <h3>RM1,000 at the end of every year for 8 years, at 8%</h3>
+    <p>You deposit RM8,000 in total but end with <strong>RM10,636.63</strong>, because early deposits earn interest for longer. An <strong>annuity</strong> is a stream of equal cash flows at equal intervals; an <strong>ordinary annuity</strong> pays at the <em>end</em> of each period. When the cash flows are unequal, it is a <strong>mixed stream</strong> and there is no shortcut.</p>
+</div>
+{{vis:l4_annuity}}
+<div class="teach-panel">
+    <h3>Annuity formulas, and why they work</h3>
+    <div class="concept-tabs"><button class="concept-tab active" onclick="switchConcept('g-l4ann-f','fv',this)">FV of an annuity</button><button class="concept-tab" onclick="switchConcept('g-l4ann-f','pv',this)">PV of an annuity</button><button class="concept-tab" onclick="switchConcept('g-l4ann-f','mixed',this)">Mixed stream</button><button class="concept-tab" onclick="switchConcept('g-l4ann-f','lump',this)">Lump sum vs annuity</button></div>
+    <div class="concept-panel active" id="g-l4ann-f-fv">
+        <h3>Add up each deposit's future value</h3>
+        <div class="definition">$FV_{\text{annuity}} = PMT\left[\dfrac{(1+r)^n - 1}{r}\right]$, a compressed form of $PMT(1+r)^{n-1} + \dots + PMT$.</div>
+        <p>Three RM1,000 deposits at 10%: 1,210 + 1,100 + 1,000 = RM3,310. The first deposit grows two years, the last one not at all.</p>
+    </div>
+    <div class="concept-panel" id="g-l4ann-f-pv">
+        <h3>What are repeated future payments worth today?</h3>
+        <div class="definition">$PV_{\text{annuity}} = PMT\left[\dfrac{1-(1+r)^{-n}}{r}\right]$</div>
+        <p>Chapter example: 50 a year for 5 years at 8% has PV ≈ 199.64, although 250 is paid in total. Every payment is worth less today because it is delayed.</p>
+    </div>
+    <div class="concept-panel" id="g-l4ann-f-mixed">
+        <h3>Mixed stream: discount each one</h3>
+        <div class="definition">$PV = \displaystyle\sum_{t=1}^{n} \frac{CF_t}{(1+r)^t}$: value = the sum of discounted future cash flows.</div>
+        <p>Chapter example: 30, 40, 50, 60, 70 at 8% → 27.78 + 34.29 + 39.69 + 44.10 + 47.64 = <b>193.51</b>. Excel's NPV function does exactly this.</p>
+    </div>
+    <div class="concept-panel" id="g-l4ann-f-lump">
+        <h3>RM8,000 now ≠ RM1,000 a year for 8 years</h3>
+        <div class="definition">Same total contributions, different timing.</div>
+        <p>The lump sum compounds for the full eight years, so it grows to more. Time can partly substitute for extra capital: earlier money works longer.</p>
+    </div>
+</div>
+{{vis:l4_annuity_vs_mixed}}
+<div class="card">
+    <h3>Compounding more often raises the true rate</h3>
+    <p>With a stated rate $r$ compounded $m$ times a year for $t$ years: $FV = PV\left(1+\dfrac{r}{m}\right)^{mt}$; the true (effective) annual rate is $\left(1+\dfrac{r}{m}\right)^{m} - 1$.</p>
+    <div class="service-matrix">
+        <div class="service-row"><strong>5% annually</strong><span>5.000%</span></div>
+        <div class="service-row"><strong>Semiannually</strong><span>5.063%: RM1,000 → 1,000(1.025)² = RM1,050.63</span></div>
+        <div class="service-row"><strong>Quarterly</strong><span>5.094%</span></div>
+        <div class="service-row"><strong>Monthly</strong><span>5.120%</span></div>
+        <div class="service-row"><strong>Weekly</strong><span>5.125%</span></div>
+        <div class="service-row"><strong>Continuously</strong><span>5.127%: each extra step adds less</span></div>
+    </div>
+</div>
+{{fig:l4_mixed}}
+<div class="scenario-grid">
+    <div class="scenario-card"><span class="scenario-label">CLASSIFY</span>
+        <h4>100, 120, 140, 160 at year-ends</h4>
+        <p>Annuity or mixed stream?</p><button onclick="revealTeach('r-l4ann-1')">Reveal logic</button>
+        <div class="scenario-answer" id="r-l4ann-1">Mixed stream: equal intervals but unequal amounts, so the annuity shortcut does not apply. Discount each cash flow separately.</div>
+    </div>
+    <div class="scenario-card"><span class="scenario-label">CREATE</span>
+        <h4>RM100,000 needed in 10 years at 6%</h4>
+        <p>How do you find the equal annual saving?</p><button onclick="revealTeach('r-l4ann-2')">Reveal logic</button>
+        <div class="scenario-answer" id="r-l4ann-2">Set $100{,}000 = PMT\,[(1.06)^{10}-1]/0.06$ and solve: the factor is about 13.18, so PMT ≈ RM7,587 a year. TVM used to design a plan, not just compute a value.</div>
+    </div>
+    <div class="scenario-card"><span class="scenario-label">EVALUATE</span>
+        <h4>"Pick the account with the most frequent compounding."</h4>
+        <p>Always right?</p><button onclick="revealTeach('r-l4ann-3')">Reveal logic</button>
+        <div class="scenario-answer" id="r-l4ann-3">At the same stated rate it gives a higher effective rate, but fees, withdrawal restrictions, liquidity and credit risk can outweigh the small extra interest. Compare complete terms.</div>
+    </div>
+</div>
+<div class="exam-lens">
+    <h3>Exam lens</h3>
+    <ul>
+        <li>Annuity = equal amounts at equal intervals; ordinary annuity = paid at the <b>end</b> of each period (no cash flow at t₀).</li>
+        <li>Mixed stream → no shortcut: discount each cash flow.</li>
+        <li>More frequent compounding → higher effective rate; adjust both the rate (r/m) and the number of periods (mt).</li>
+    </ul>
+</div>
+<div class="mini-check">
+    <h4>Quick check</h4>
+    <p>Why is an annuity due (payments at the start of each period) worth more than an ordinary annuity with the same payments?</p>
+    <button onclick="revealTeach('r-l4ann-4')">Reveal logic</button>
+    <div class="micro-answer" id="r-l4ann-4">Every payment arrives one period earlier, so each one compounds one extra period (or is discounted one period less): its value is the ordinary annuity's value × (1 + r).</div>
+</div>

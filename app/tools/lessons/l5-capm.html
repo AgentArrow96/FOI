@@ -1,0 +1,72 @@
+<div class="lesson-intro"><span class="lesson-kicker">THE BIG STORY</span>
+    <h3>Why should the market pay you for risk you could have diversified away for free?</h3>
+    <p>If investors can cheaply remove a company's firm-specific risk by holding a broad portfolio, the market has no reason to keep rewarding anyone who chooses not to. Under the <strong>Capital Asset Pricing Model (CAPM)</strong>, only <strong>systematic risk</strong>, measured by beta, earns a higher required return. More total risk does not automatically justify a higher CAPM return.</p>
+</div>
+<div class="analogy-box">
+    <h3>The CAPM equation</h3>
+    <p>A model linking risk and return to define the required return on an investment, using beta, the risk-free rate and the expected market return. $E(R_m) - R_f$ is the <b>market risk premium</b>; beta scales it.</p>
+    <span class="formula">Required return = R_f + β × [E(R_m) − R_f]</span>
+</div>
+<div class="teach-panel" style="margin-top:18px">
+    <h3>Worked examples (R<sub>f</sub> = 4%, E(R<sub>m</sub>) = 10%, premium 6%)</h3>
+    <div class="concept-tabs"><button class="concept-tab active" onclick="switchConcept('g-l5capm-e','b15',this)">β = 1.5</button><button class="concept-tab" onclick="switchConcept('g-l5capm-e','table',this)">Three betas</button><button class="concept-tab" onclick="switchConcept('g-l5capm-e','zero',this)">β = 0 and negative</button></div>
+    <div class="concept-panel active" id="g-l5capm-e-b15">
+        <h3>1.5 times the market's sensitivity, 1.5 times its premium</h3>
+        <div class="definition">$R = 4\% + 1.5(10\% - 4\%) = 4\% + 9\% = 13\%$</div>
+    </div>
+    <div class="concept-panel" id="g-l5capm-e-table">
+        <h3>Required return rises with beta</h3>
+        <div class="definition">β 0.5 → 7%; β 1.0 → 10% (the market itself); β 1.5 → 13%.</div>
+        <p>The risk-free rate is the baseline; beta determines the extra compensation.</p>
+    </div>
+    <div class="concept-panel" id="g-l5capm-e-zero">
+        <h3>Beta zero or negative</h3>
+        <div class="definition">β = 0 → R = 4%, the risk-free rate. β = −0.5 → R = 4% − 3% = 1%.</div>
+        <p>A negative-beta asset tends to rise when the market falls: a hedge. Investors may accept a lower expected return for that protection.</p>
+    </div>
+</div>
+{{vis:l5_sml}}
+<div class="card">
+    <h3>The Security Market Line: CAPM as a graph</h3>
+    <p>Plot required return against beta for many betas and you get the SML. In the chapter's Figure 5.6: R<sub>f</sub> = 6%, required return at β = 1 is 10%, so $R_i = 6\% + 4\%\beta_i$ and β = 1.25 requires 11%.</p>
+    <div class="service-matrix">
+        <div class="service-row"><strong>Intercept</strong><span>The risk-free rate: the return required at zero beta.</span></div>
+        <div class="service-row"><strong>Slope</strong><span>The market risk premium: extra required return per unit of beta.</span></div>
+        <div class="service-row"><strong>Above the SML</strong><span>Expected return exceeds the CAPM requirement: positive expected alpha, potentially undervalued.</span></div>
+        <div class="service-row"><strong>Below the SML</strong><span>Expected return falls short: negative alpha, potentially overvalued.</span></div>
+    </div>
+    <p class="card-note">Alpha = expected return − CAPM-required return. A positive alpha may just mean the forecast or the model is wrong; it is not proof of a bargain.</p>
+</div>
+{{vis:l5_sml_sketch}}
+{{fig:l5_sml}}
+<div class="scenario-grid">
+    <div class="scenario-card"><span class="scenario-label">CALCULATE</span>
+        <h4>R<sub>f</sub> 6%, E(R<sub>m</sub>) 10%, β = 1.25</h4>
+        <p>Required return?</p><button onclick="revealTeach('r-l5capm-1')">Reveal logic</button>
+        <div class="scenario-answer" id="r-l5capm-1">6% + 1.25 × 4% = <b>11%</b>, matching Figure 5.6.</div>
+    </div>
+    <div class="scenario-card"><span class="scenario-label">DECIDE</span>
+        <h4>β = 1.5 with R<sub>f</sub> 4%, E(R<sub>m</sub>) 10%; your forecast is 15%</h4>
+        <p>Above or below the SML?</p><button onclick="revealTeach('r-l5capm-2')">Reveal logic</button>
+        <div class="scenario-answer" id="r-l5capm-2">Required 13%, forecast 15%: alpha +2%, above the SML and potentially attractive if the forecast is reliable.</div>
+    </div>
+    <div class="scenario-card"><span class="scenario-label">EVALUATE</span>
+        <h4>"Buy the highest-beta stock to earn the highest return."</h4>
+        <p>Agree?</p><button onclick="revealTeach('r-l5capm-3')">Reveal logic</button>
+        <div class="scenario-answer" id="r-l5capm-3">No. CAPM links beta to <b>required expected</b> return, not guaranteed realised return. A β 2.0 stock can lose 40% in a bad year; high beta magnifies market falls too.</div>
+    </div>
+</div>
+<div class="exam-lens">
+    <h3>Exam lens</h3>
+    <ul>
+        <li>CAPM: R = R<sub>f</sub> + β[E(R<sub>m</sub>) − R<sub>f</sub>]; beta multiplies the <b>premium</b>, not the market return.</li>
+        <li>SML: required return vs <b>beta</b>. Efficient frontier: expected return vs <b>σ<sub>p</sub></b>. Don't swap the axes.</li>
+        <li>Only nondiversifiable risk has a positive risk-return relationship under CAPM.</li>
+    </ul>
+</div>
+<div class="mini-check">
+    <h4>Quick check</h4>
+    <p>A common mistake computes CAPM as R<sub>f</sub> + β × E(R<sub>m</sub>). With R<sub>f</sub> 5%, E(R<sub>m</sub>) 11% and β = 1.2, compare the wrong and right answers.</p>
+    <button onclick="revealTeach('r-l5capm-4')">Reveal logic</button>
+    <div class="micro-answer" id="r-l5capm-4">Wrong: 5% + 1.2 × 11% = 18.2%. Right: 5% + 1.2 × (11% − 5%) = <b>12.2%</b>. Beta multiplies the market risk premium.</div>
+</div>

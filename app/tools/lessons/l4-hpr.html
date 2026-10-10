@@ -1,0 +1,87 @@
+<div class="lesson-intro"><span class="lesson-kicker">THE BIG STORY</span>
+    <h3>Investment A returned 40% in one year. Investment B returned 40% over five years.</h3>
+    <p>Same holding-period return, obviously not the same performance. <strong>HPR</strong> is the easy measure of total return over a period; <strong>yield (IRR)</strong> is the compound annual rate that respects the time value of money. The same arithmetic gives <strong>growth rates</strong>.</p>
+</div>
+<div class="analogy-box">
+    <h3>Holding period return</h3>
+    <p>The total return earned from holding an investment for a specified period, usually a year or less: income plus the capital gain or loss, relative to the beginning value.</p>
+    <span class="formula">HPR = [income + (P₁ − P₀)] / P₀        e.g. buy RM100, dividend RM5, end RM108 → (5 + 8) / 100 = 13%</span>
+</div>
+<div class="compare-box" style="margin-top:18px">
+    <div class="compare-side highlight">
+        <h4>HPR: advantages</h4>
+        <ul><li>Easy to calculate and understand</li><li>Includes both income and growth</li></ul>
+    </div>
+    <div class="compare-side">
+        <h4>HPR: disadvantages</h4>
+        <ul><li>Ignores the time value of money</li><li>Can mislead when the holding period is longer than a year</li></ul>
+    </div>
+</div>
+<div class="card" style="margin-top:18px">
+    <h3>Realized vs paper return</h3>
+    <div class="service-matrix">
+        <div class="service-row"><strong>Realized return</strong><span>Current return actually received during the period.</span></div>
+        <div class="service-row"><strong>Paper return</strong><span>A return achieved but not yet realised: no sale has taken place. Buy at RM100, now RM150: RM50 paper gain until you sell.</span></div>
+    </div>
+</div>
+<div class="teach-panel" style="margin-top:18px">
+    <h3>Yield (IRR) and growth rates</h3>
+    <div class="concept-tabs"><button class="concept-tab active" onclick="switchConcept('g-l4hpr-y','single',this)">Single cash flow</button><button class="concept-tab" onclick="switchConcept('g-l4hpr-y','stream',this)">Stream of income</button><button class="concept-tab" onclick="switchConcept('g-l4hpr-y','rule',this)">Decision rule</button><button class="concept-tab" onclick="switchConcept('g-l4hpr-y','reinv',this)">Reinvestment</button><button class="concept-tab" onclick="switchConcept('g-l4hpr-y','growth',this)">Growth rate</button></div>
+    <div class="concept-panel active" id="g-l4hpr-y-single">
+        <h3>The compound annual rate</h3>
+        <div class="definition">From $FV = PV(1+r)^n$: $r = \left(\dfrac{FV}{PV}\right)^{1/n} - 1$.</div>
+        <p>Chapter example: 1,000 grows to 1,400 in 5 years: $1.4^{1/5} - 1 \approx$ <b>6.96%</b> a year, although the total gain was 40%.</p>
+    </div>
+    <div class="concept-panel" id="g-l4hpr-y-stream">
+        <h3>IRR for several cash flows</h3>
+        <div class="definition">The discount rate that makes the present value of the income stream equal to the investment's price: $P_0 = \displaystyle\sum_{t=1}^{n}\frac{CF_t}{(1+IRR)^t}$.</div>
+        <p>The same TVM system as Appendix 4A, with a different unknown: now you know the price and the cash flows and solve for $r$.</p>
+    </div>
+    <div class="concept-panel" id="g-l4hpr-y-rule">
+        <h3>Accept when IRR ≥ required return</h3>
+        <div class="definition">IRR = 9% clears a 7% hurdle but fails a 12% one.</div>
+        <p>No return is "good" in isolation. IRR uses the time value of money and lets investments with different holding periods be compared; its drawback is that the calculation is complex.</p>
+    </div>
+    <div class="concept-panel" id="g-l4hpr-y-reinv">
+        <h3>The critical assumption</h3>
+        <div class="definition">Using IRR assumes all income received can be <b>reinvested at the same rate</b>. The reinvestment rate is what you actually earn on that income; the fully compounded rate of return includes the interest earned on interest.</div>
+        <p>A 10% investment whose cash distributions can only be reinvested at 3% will build less wealth than "10% compounded" suggests. Figure 4.1 shows how big interest on interest becomes over long horizons.</p>
+    </div>
+    <div class="concept-panel" id="g-l4hpr-y-growth">
+        <h3>Growth rate: same arithmetic, different stream</h3>
+        <div class="definition">The compound annual rate of change in a stream such as dividends: $g = \left(\dfrac{D_n}{D_0}\right)^{1/n} - 1$.</div>
+        <p>Chapter example: dividends from 0.92 (2002) to 1.85 (2011), nine years: about <b>8.07%</b> a year. Not (1.85 − 0.92)/0.92: that is total growth, not annual compound growth.</p>
+    </div>
+</div>
+{{fig:l4_interest}}
+<div class="scenario-grid">
+    <div class="scenario-card"><span class="scenario-label">EVALUATE</span>
+        <h4>"A 40% five-year HPR beats a 30% one-year HPR."</h4>
+        <p>Agree?</p><button onclick="revealTeach('r-l4hpr-1')">Reveal logic</button>
+        <div class="scenario-answer" id="r-l4hpr-1">Probably not: 40% over five years is about 6.96% a year versus 30% in one year. Compare compound annual yields, not HPRs over different periods.</div>
+    </div>
+    <div class="scenario-card"><span class="scenario-label">CALCULATE</span>
+        <h4>Buy at RM50, dividend RM2, worth RM55 a year later</h4>
+        <p>HPR?</p><button onclick="revealTeach('r-l4hpr-2')">Reveal logic</button>
+        <div class="scenario-answer" id="r-l4hpr-2">[2 + (55 − 50)] / 50 = 7 / 50 = <b>14%</b>.</div>
+    </div>
+    <div class="scenario-card"><span class="scenario-label">CALCULATE</span>
+        <h4>RM1,000 today; RM600 at the end of years 1 and 2; required 12%</h4>
+        <p>Does the IRR clear the hurdle?</p><button onclick="revealTeach('r-l4hpr-3')">Reveal logic</button>
+        <div class="scenario-answer" id="r-l4hpr-3">PV at 12% = 600/1.12 + 600/1.12² ≈ 535.71 + 478.32 = 1,014.03 &gt; 1,000, so the IRR is above 12% (about 13.07%): acceptable.</div>
+    </div>
+</div>
+<div class="exam-lens">
+    <h3>Exam lens</h3>
+    <ul>
+        <li>HPR = (income + capital gain) / beginning value; it ignores time, so it misleads beyond one year.</li>
+        <li>IRR = the compound annual return that equates PV of benefits with the price; accept if IRR ≥ required return.</li>
+        <li>IRR assumes reinvestment at the same rate; growth rates use the same compound-rate formula.</li>
+    </ul>
+</div>
+<div class="mini-check">
+    <h4>Quick check</h4>
+    <p>An asset bought for RM2,000 is worth RM3,000 after 4 years with no income. Total return and compound annual return?</p>
+    <button onclick="revealTeach('r-l4hpr-4')">Reveal logic</button>
+    <div class="micro-answer" id="r-l4hpr-4">HPR = 1,000 / 2,000 = 50%. Annual: 1.5^(1/4) − 1 ≈ 10.67% a year.</div>
+</div>

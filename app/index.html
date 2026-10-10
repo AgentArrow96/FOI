@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Fundamentals of Investing Chapters 1-5: Guided Learning &amp; Exam Prep</title>
+    <meta name="description" content="Guided lessons, interactive visuals, full notes, subjective model answers and an MCQ simulator for Fundamentals of Investing, Chapters 1-5." />
+    <link rel="icon" href="data:," />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&amp;display=swap" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css" />
+    <link rel="stylesheet" href="assets/css/main.css" />
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+    <script defer src="assets/js/questions.js"></script>
+    <script defer src="assets/js/diagrams.js"></script>
+    <script defer src="assets/js/visuals.js"></script>
+    <script defer src="assets/js/app.js"></script>
+</head>
+<body>
+    <div class="app">
+        <aside class="sidebar" id="sidebar">
+            <div class="brand">
+                <h1>Fundamentals of Investing</h1>
+                <p>Chapters 1-5 · Guided learning &amp; exam prep</p>
+                <p class="last-updated" id="last-updated" title="Fetching from GitHub...">
+                    <span class="live-dot" aria-hidden="true"></span><span id="last-updated-text">Checking last update...</span>
+                </p>
+            </div>
+            <div class="nav-panel">
+                <p class="nav-label fg-gold">EXAM PREP</p>
+                <button class="nav-btn nav-exam active" id="nav-home" data-nav="home">Quick Start</button>
+                <button class="nav-btn nav-exam" id="nav-cheat" data-nav="cheat">Master Cheat Sheet</button>
+                <button class="nav-btn nav-exam" id="nav-traps" data-nav="traps">Dangerous Confusions</button>
+                <button class="nav-btn nav-exam" id="nav-simulator" data-nav="simulator">MCQ Simulator</button>
+                <button class="nav-btn nav-exam" id="nav-strategy" data-nav="strategy">Test Strategy</button>
+            </div>
+            <details class="nav-module">
+                <summary class="nav-module-summary fg-l1"><span>CHAPTER 1</span><span class="chevron">⌄</span></summary>
+                <div class="nav-module-body">
+                    <button class="nav-btn nav-l1" id="nav-l1-what" data-nav="l1-what">What an investment is</button>
+                    <button class="nav-btn nav-l1" id="nav-l1-system" data-nav="l1-system">Flow of funds & investors</button>
+                    <button class="nav-btn nav-l1" id="nav-l1-process" data-nav="l1-process">The seven-step process</button>
+                    <button class="nav-btn nav-l1" id="nav-l1-life" data-nav="l1-life">Taxes, life cycle & economy</button>
+                    <button class="nav-btn nav-l1" id="nav-l1-short" data-nav="l1-short">Short-term investments</button>
+                    <button class="nav-btn nav-l1" id="nav-l1-notes" data-nav="l1-notes">Full intuitive explanation</button>
+                    <button class="nav-btn nav-l1" id="nav-l1-subjective" data-nav="l1-subjective">Subjective exam prep</button>
+                    <button class="nav-btn nav-l1" id="nav-l1-prep" data-nav="l1-prep">MCQ prep</button>
+                </div>
+            </details>
+            <details class="nav-module">
+                <summary class="nav-module-summary fg-l2"><span>CHAPTER 2</span><span class="chevron">⌄</span></summary>
+                <div class="nav-module-body">
+                    <button class="nav-btn nav-l2" id="nav-l2-markets" data-nav="l2-markets">Market types</button>
+                    <button class="nav-btn nav-l2" id="nav-l2-ipo" data-nav="l2-ipo">IPOs & investment banking</button>
+                    <button class="nav-btn nav-l2" id="nav-l2-trading" data-nav="l2-trading">Brokers, dealers & trading</button>
+                    <button class="nav-btn nav-l2" id="nav-l2-global" data-nav="l2-global">Global markets & regulation</button>
+                    <button class="nav-btn nav-l2" id="nav-l2-margin" data-nav="l2-margin">Long purchases & margin</button>
+                    <button class="nav-btn nav-l2" id="nav-l2-short" data-nav="l2-short">Short selling</button>
+                    <button class="nav-btn nav-l2" id="nav-l2-notes" data-nav="l2-notes">Full intuitive explanation</button>
+                    <button class="nav-btn nav-l2" id="nav-l2-subjective" data-nav="l2-subjective">Subjective exam prep</button>
+                    <button class="nav-btn nav-l2" id="nav-l2-prep" data-nav="l2-prep">MCQ prep</button>
+                </div>
+            </details>
+            <details class="nav-module">
+                <summary class="nav-module-summary fg-l3"><span>CHAPTER 3</span><span class="chevron">⌄</span></summary>
+                <div class="nav-module-body">
+                    <button class="nav-btn nav-l3" id="nav-l3-info" data-nav="l3-info">Information & online investing</button>
+                    <button class="nav-btn nav-l3" id="nav-l3-indexes" data-nav="l3-indexes">Averages, indexes & benchmarks</button>
+                    <button class="nav-btn nav-l3" id="nav-l3-brokers" data-nav="l3-brokers">Brokers & accounts</button>
+                    <button class="nav-btn nav-l3" id="nav-l3-orders" data-nav="l3-orders">Orders & execution</button>
+                    <button class="nav-btn nav-l3" id="nav-l3-protect" data-nav="l3-protect">Costs, protection & advice</button>
+                    <button class="nav-btn nav-l3" id="nav-l3-notes" data-nav="l3-notes">Full intuitive explanation</button>
+                    <button class="nav-btn nav-l3" id="nav-l3-subjective" data-nav="l3-subjective">Subjective exam prep</button>
+                    <button class="nav-btn nav-l3" id="nav-l3-prep" data-nav="l3-prep">MCQ prep</button>
+                </div>
+            </details>
+            <details class="nav-module">
+                <summary class="nav-module-summary fg-l4"><span>CHAPTER 4 + 4A</span><span class="chevron">⌄</span></summary>
+                <div class="nav-module-body">
+                    <button class="nav-btn nav-l4" id="nav-l4-tvm" data-nav="l4-tvm">Compounding, FV & PV</button>
+                    <button class="nav-btn nav-l4" id="nav-l4-annuity" data-nav="l4-annuity">Annuities & mixed streams</button>
+                    <button class="nav-btn nav-l4" id="nav-l4-return" data-nav="l4-return">Return & required return</button>
+                    <button class="nav-btn nav-l4" id="nav-l4-hpr" data-nav="l4-hpr">HPR, IRR & growth rates</button>
+                    <button class="nav-btn nav-l4" id="nav-l4-risk" data-nav="l4-risk">Sources & measures of risk</button>
+                    <button class="nav-btn nav-l4" id="nav-l4-notes" data-nav="l4-notes">Full intuitive explanation</button>
+                    <button class="nav-btn nav-l4" id="nav-l4-subjective" data-nav="l4-subjective">Subjective exam prep</button>
+                    <button class="nav-btn nav-l4" id="nav-l4-prep" data-nav="l4-prep">MCQ prep</button>
+                </div>
+            </details>
+            <details class="nav-module">
+                <summary class="nav-module-summary fg-l5"><span>CHAPTER 5</span><span class="chevron">⌄</span></summary>
+                <div class="nav-module-body">
+                    <button class="nav-btn nav-l5" id="nav-l5-portfolio" data-nav="l5-portfolio">Portfolio return & risk</button>
+                    <button class="nav-btn nav-l5" id="nav-l5-correlation" data-nav="l5-correlation">Correlation & diversification</button>
+                    <button class="nav-btn nav-l5" id="nav-l5-beta" data-nav="l5-beta">Systematic risk & beta</button>
+                    <button class="nav-btn nav-l5" id="nav-l5-capm" data-nav="l5-capm">CAPM & the SML</button>
+                    <button class="nav-btn nav-l5" id="nav-l5-frontier" data-nav="l5-frontier">Efficient frontier & MPT</button>
+                    <button class="nav-btn nav-l5" id="nav-l5-notes" data-nav="l5-notes">Full intuitive explanation</button>
+                    <button class="nav-btn nav-l5" id="nav-l5-subjective" data-nav="l5-subjective">Subjective exam prep</button>
+                    <button class="nav-btn nav-l5" id="nav-l5-prep" data-nav="l5-prep">MCQ prep</button>
+                </div>
+            </details>
+        </aside>
+        <button aria-controls="sidebar" aria-expanded="false" aria-label="Open navigation" class="mobile-menu" id="mobile-menu" data-action="toggle-sidebar"><span class="bars" aria-hidden="true"></span></button>
+        <button type="button" class="contents-fab" id="contents-fab" data-action="contents" title="Back to the section list" hidden>↑ Contents</button>
+        <main class="main">
+            <div class="content">
+                <div class="topbar">
+                    <button data-action="print">Print current page</button>
+                    <button data-action="reset-progress">↺ Reset progress</button>
+                </div>
+                <section class="page-section hidden" data-page="home" id="sec-home"></section>
+                <section class="page-section hidden" data-page="cheat" id="sec-cheat"></section>
+                <section class="page-section hidden" data-page="traps" id="sec-traps"></section>
+                <section class="page-section hidden" data-page="simulator" id="sec-simulator"></section>
+                <section class="page-section hidden" data-page="strategy" id="sec-strategy"></section>
+                <section class="page-section hidden" data-page="l1-what" id="sec-l1-what"></section>
+                <section class="page-section hidden" data-page="l1-system" id="sec-l1-system"></section>
+                <section class="page-section hidden" data-page="l1-process" id="sec-l1-process"></section>
+                <section class="page-section hidden" data-page="l1-life" id="sec-l1-life"></section>
+                <section class="page-section hidden" data-page="l1-short" id="sec-l1-short"></section>
+                <section class="page-section hidden" data-page="l1-notes" id="sec-l1-notes"></section>
+                <section class="page-section hidden" data-page="l1-subjective" id="sec-l1-subjective"></section>
+                <section class="page-section hidden" data-page="l1-prep" id="sec-l1-prep"></section>
+                <section class="page-section hidden" data-page="l2-markets" id="sec-l2-markets"></section>
+                <section class="page-section hidden" data-page="l2-ipo" id="sec-l2-ipo"></section>
+                <section class="page-section hidden" data-page="l2-trading" id="sec-l2-trading"></section>
+                <section class="page-section hidden" data-page="l2-global" id="sec-l2-global"></section>
+                <section class="page-section hidden" data-page="l2-margin" id="sec-l2-margin"></section>
+                <section class="page-section hidden" data-page="l2-short" id="sec-l2-short"></section>
+                <section class="page-section hidden" data-page="l2-notes" id="sec-l2-notes"></section>
+                <section class="page-section hidden" data-page="l2-subjective" id="sec-l2-subjective"></section>
+                <section class="page-section hidden" data-page="l2-prep" id="sec-l2-prep"></section>
+                <section class="page-section hidden" data-page="l3-info" id="sec-l3-info"></section>
+                <section class="page-section hidden" data-page="l3-indexes" id="sec-l3-indexes"></section>
+                <section class="page-section hidden" data-page="l3-brokers" id="sec-l3-brokers"></section>
+                <section class="page-section hidden" data-page="l3-orders" id="sec-l3-orders"></section>
+                <section class="page-section hidden" data-page="l3-protect" id="sec-l3-protect"></section>
+                <section class="page-section hidden" data-page="l3-notes" id="sec-l3-notes"></section>
+                <section class="page-section hidden" data-page="l3-subjective" id="sec-l3-subjective"></section>
+                <section class="page-section hidden" data-page="l3-prep" id="sec-l3-prep"></section>
+                <section class="page-section hidden" data-page="l4-tvm" id="sec-l4-tvm"></section>
+                <section class="page-section hidden" data-page="l4-annuity" id="sec-l4-annuity"></section>
+                <section class="page-section hidden" data-page="l4-return" id="sec-l4-return"></section>
+                <section class="page-section hidden" data-page="l4-hpr" id="sec-l4-hpr"></section>
+                <section class="page-section hidden" data-page="l4-risk" id="sec-l4-risk"></section>
+                <section class="page-section hidden" data-page="l4-notes" id="sec-l4-notes"></section>
+                <section class="page-section hidden" data-page="l4-subjective" id="sec-l4-subjective"></section>
+                <section class="page-section hidden" data-page="l4-prep" id="sec-l4-prep"></section>
+                <section class="page-section hidden" data-page="l5-portfolio" id="sec-l5-portfolio"></section>
+                <section class="page-section hidden" data-page="l5-correlation" id="sec-l5-correlation"></section>
+                <section class="page-section hidden" data-page="l5-beta" id="sec-l5-beta"></section>
+                <section class="page-section hidden" data-page="l5-capm" id="sec-l5-capm"></section>
+                <section class="page-section hidden" data-page="l5-frontier" id="sec-l5-frontier"></section>
+                <section class="page-section hidden" data-page="l5-notes" id="sec-l5-notes"></section>
+                <section class="page-section hidden" data-page="l5-subjective" id="sec-l5-subjective"></section>
+                <section class="page-section hidden" data-page="l5-prep" id="sec-l5-prep"></section>
+
+            </div>
+        </main>
+    </div>
+</body>
+</html>

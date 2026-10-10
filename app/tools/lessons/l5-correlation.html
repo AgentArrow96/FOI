@@ -1,0 +1,79 @@
+<div class="lesson-intro"><span class="lesson-kicker">THE BIG STORY</span>
+    <h3>Asset A earns 20% in booms and 0% in slumps. Asset B does the opposite.</h3>
+    <p>Hold 50% of each and you earn 10% in both scenarios. Neither asset became safer; their fluctuations <strong>offset</strong> each other. <strong>Correlation</strong>, the statistical relationship between two series of returns, is the reason diversification works.</p>
+</div>
+{{vis:l5_offset}}
+<div class="teach-panel">
+    <h3>The correlation coefficient, ρ, from −1 to +1</h3>
+    <div class="concept-tabs"><button class="concept-tab active" onclick="switchConcept('g-l5cor-r','pos',this)">Perfectly positive</button><button class="concept-tab" onclick="switchConcept('g-l5cor-r','zero',this)">Uncorrelated</button><button class="concept-tab" onclick="switchConcept('g-l5cor-r','neg',this)">Perfectly negative</button></div>
+    <div class="concept-panel active" id="g-l5cor-r-pos">
+        <h3>ρ = +1: move together exactly</h3>
+        <div class="definition">Positively correlated items move in the same direction. At +1, combining them eliminates no risk.</div>
+    </div>
+    <div class="concept-panel" id="g-l5cor-r-zero">
+        <h3>ρ ≈ 0: no relationship</h3>
+        <div class="definition">Uncorrelated series lack any relationship; combining them can still reduce risk substantially.</div>
+    </div>
+    <div class="concept-panel" id="g-l5cor-r-neg">
+        <h3>ρ = −1: move opposite exactly</h3>
+        <div class="definition">The slides say this "eliminates all risk": true only with the right weights.</div>
+        <p>With σ<sub>A</sub> = 20% and σ<sub>B</sub> = 10%, a 50/50 mix still has 5% volatility. Zero needs $w_A\sigma_A = w_B\sigma_B$: <b>w<sub>A</sub> = 1/3, w<sub>B</sub> = 2/3</b>.</p>
+    </div>
+</div>
+{{vis:l5_correlation}}
+<div class="card">
+    <h3>Same assets, different correlations (50/50, σ 20% and 10%)</h3>
+    <table class="comparison-table">
+        <tr><th>ρ</th><th>+1.0</th><th>+0.5</th><th>0</th><th>−0.5</th><th>−1.0</th></tr>
+        <tr><td>σ<sub>p</sub></td><td>15%</td><td>13.23%</td><td>11.18%</td><td>8.66%</td><td>5%</td></tr>
+    </table>
+    <p class="card-note">The lower the correlation, the lower the portfolio risk, with individual volatilities unchanged. Figure 5.4 shows the risk-return combinations bending further left as ρ falls.</p>
+</div>
+<div class="compare-box" style="margin-top:18px">
+    <div class="compare-side highlight">
+        <h4>The X, Y and Z example (Table 5.3)</h4>
+        <p>X: 8, 10, 12, 14, 16%. Y: 24, 20, 16, 12, 8%. Z: 8, 12, 16, 20, 24%.</p>
+        <ul><li>⅔X + ⅓Y earns 13.33% <b>every</b> year: σ = 0%</li><li>⅔X + ⅓Z also averages 13.33% but σ = 4.2%</li><li>XY dominates XZ: same return, less risk</li></ul>
+    </div>
+    <div class="compare-side">
+        <h4>International diversification</h4>
+        <ul>
+            <li>Foreign economic cycles may not move with the home cycle: a new source of low correlation</li>
+            <li>Methods: foreign stocks on home exchanges, Yankee bonds, ADRs, mutual funds investing abroad</li>
+            <li>Costs: currency risk, less convenience, higher expense, often riskier markets</li>
+            <li>In a global crisis correlations can jump: historical low correlation ≠ guaranteed future low correlation</li>
+        </ul>
+    </div>
+</div>
+{{fig:l5_combos}}
+<div class="scenario-grid">
+    <div class="scenario-card"><span class="scenario-label">ANALYSE</span>
+        <h4>Two investments each have σ = 15%</h4>
+        <p>Can an equal-weighted portfolio have σ below 15%?</p><button onclick="revealTeach('r-l5cor-1')">Reveal logic</button>
+        <div class="scenario-answer" id="r-l5cor-1">Yes, whenever ρ &lt; +1. Correlation decides how big the diversification benefit is.</div>
+    </div>
+    <div class="scenario-card"><span class="scenario-label">EVALUATE</span>
+        <h4>"Stock A is far more volatile than B, so adding A must raise my portfolio's risk."</h4>
+        <p>Agree?</p><button onclick="revealTeach('r-l5cor-2')">Reveal logic</button>
+        <div class="scenario-answer" id="r-l5cor-2">Not necessarily. What matters is A's correlation with the existing holdings and its weight. Individual asset risk ≠ marginal contribution to portfolio risk.</div>
+    </div>
+    <div class="scenario-card"><span class="scenario-label">EVALUATE</span>
+        <h4>"Adding more stocks always reduces risk."</h4>
+        <p>Agree?</p><button onclick="revealTeach('r-l5cor-3')">Reveal logic</button>
+        <div class="scenario-answer" id="r-l5cor-3">No. Another highly correlated stock adds little diversification. Ask whether the new asset reduces concentration or covariance, not how many stocks you now own.</div>
+    </div>
+</div>
+<div class="exam-lens">
+    <h3>Exam lens</h3>
+    <ul>
+        <li>ρ ranges from −1 to +1; the lower it is, the greater the potential risk reduction.</li>
+        <li>ρ = +1: no reduction. ρ = −1: zero risk is possible, but only with the right weights.</li>
+        <li>Correlation describes co-movement, not profitability.</li>
+    </ul>
+</div>
+<div class="mini-check">
+    <h4>Quick check</h4>
+    <p>σ<sub>A</sub> = 30%, σ<sub>B</sub> = 10%, ρ = −1. What weight in A makes the portfolio riskless?</p>
+    <button onclick="revealTeach('r-l5cor-4')">Reveal logic</button>
+    <div class="micro-answer" id="r-l5cor-4">Set w<sub>A</sub> × 30% = (1 − w<sub>A</sub>) × 10%: w<sub>A</sub> = 10/40 = <b>25%</b>, with 75% in B.</div>
+</div>

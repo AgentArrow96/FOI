@@ -1,0 +1,83 @@
+<div class="lesson-intro"><span class="lesson-kicker">THE BIG STORY</span>
+    <h3>A stock trades around RM10 and you want to buy</h3>
+    <p>With a market order you might pay RM10.02, or RM10.10, depending on liquidity. With a limit order at RM9.80 you pay RM9.80 or less, or you never trade at all. Every order trades off <strong>execution certainty</strong> against <strong>price control</strong>; you rarely get both. The right question is: which risk do I care about more?</p>
+</div>
+{{vis:l3_order_matrix}}
+<div class="teach-panel">
+    <h3>The order types</h3>
+    <div class="concept-tabs"><button class="concept-tab active" onclick="switchConcept('g-l3ord-t','market',this)">Market</button><button class="concept-tab" onclick="switchConcept('g-l3ord-t','limit',this)">Limit</button><button class="concept-tab" onclick="switchConcept('g-l3ord-t','stop',this)">Stop-loss</button><button class="concept-tab" onclick="switchConcept('g-l3ord-t','stoplimit',this)">Stop-limit</button><button class="concept-tab" onclick="switchConcept('g-l3ord-t','time',this)">Time conditions</button><button class="concept-tab" onclick="switchConcept('g-l3ord-t','lots',this)">Lots</button></div>
+    <div class="concept-panel active" id="g-l3ord-t-market">
+        <h3>Market order: execution first</h3>
+        <div class="definition">Buy or sell at the best price available when the order is placed: the fastest way to fill an order.</div>
+        <p>You control timing, not the exact price.</p>
+    </div>
+    <div class="concept-panel" id="g-l3ord-t-limit">
+        <h3>Limit order: price first</h3>
+        <div class="definition">Buy at or below a specified price, or sell at or above it. If the limit is not met, the order is not filled.</div>
+        <p>Price protection, at the cost of execution uncertainty.</p>
+    </div>
+    <div class="concept-panel" id="g-l3ord-t-stop">
+        <h3>Stop-loss: a trigger, not a guarantee</h3>
+        <div class="definition">A "suspended" order to sell if the price reaches or falls below a set level; once activated it becomes a <b>market order</b>. Can be a day order or GTC.</div>
+        <p>If the stock gaps from RM18 to RM14 past a RM17 stop, you may sell near RM14. A buy stop above the price can limit losses on a <b>short</b> position.</p>
+    </div>
+    <div class="concept-panel" id="g-l3ord-t-stoplimit">
+        <h3>Stop-limit: trigger plus price control</h3>
+        <div class="definition">When the stop is reached, the order becomes a <b>limit</b> order: it prevents a sale at an undesirable price, but may not fill if prices keep falling.</div>
+    </div>
+    <div class="concept-panel" id="g-l3ord-t-time">
+        <h3>How long an order lives</h3>
+        <div class="definition">Fill-or-kill: execute immediately or cancel. Day order: expires at the end of the trading day if unfilled. Good-'til-canceled: stays in effect (the slides say up to six months) unless filled, cancelled or renewed.</div>
+        <p>Price condition + time condition = a complete order.</p>
+    </div>
+    <div class="concept-panel" id="g-l3ord-t-lots">
+        <h3>Round lots and odd lots</h3>
+        <div class="definition">Round lot: 100 shares or multiples of 100. Odd lot: fewer than 100 shares (the textbook's convention).</div>
+    </div>
+</div>
+<div class="card" style="margin-top:18px">
+    <h3>Market vs limit: the comparison to remember</h3>
+    <table class="comparison-table">
+        <tr><th></th><th>Market order</th><th>Limit order</th></tr>
+        <tr><td>Priority</td><td>execution</td><td>price</td></tr>
+        <tr><td>Will it fill?</td><td>very likely</td><td>not guaranteed</td></tr>
+        <tr><td>Exact price controlled?</td><td>no</td><td>yes</td></tr>
+        <tr><td>Main risk</td><td>a poor execution price</td><td>no execution at all</td></tr>
+    </table>
+</div>
+<div class="analogy-box" style="margin-top:18px">
+    <h3>Day trading: activity is not skill</h3>
+    <p>Day traders buy and sell rapidly within the day for quick profits; the slides call it highly risky, especially with margin, and costly because of frequent commissions. More decisions feel like more control, but more trades mean more costs and more chances for error.</p>
+</div>
+{{fig:l3_stops}}
+<div class="scenario-grid">
+    <div class="scenario-card"><span class="scenario-label">APPLY</span>
+        <h4>Buy a thinly traded stock, but never above RM5.20</h4>
+        <p>Which order?</p><button onclick="revealTeach('r-l3ord-1')">Reveal logic</button>
+        <div class="scenario-answer" id="r-l3ord-1">A limit buy at RM5.20: a market order prioritises execution and could fill above the constraint.</div>
+    </div>
+    <div class="scenario-card"><span class="scenario-label">EVALUATE</span>
+        <h4>"A stop-loss at RM17 guarantees I lose no more than RM3 from RM20."</h4>
+        <p>True?</p><button onclick="revealTeach('r-l3ord-2')">Reveal logic</button>
+        <div class="scenario-answer" id="r-l3ord-2">False. The stop price is a trigger; the order then becomes a market order, so a downward gap can fill well below RM17. A stop-limit controls price but may not fill at all.</div>
+    </div>
+    <div class="scenario-card"><span class="scenario-label">ANALYSE</span>
+        <h4>Investor A must exit today; Investor B only buys if cheap</h4>
+        <p>Who uses which order?</p><button onclick="revealTeach('r-l3ord-3')">Reveal logic</button>
+        <div class="scenario-answer" id="r-l3ord-3">A values execution certainty → market order. B values price certainty → limit order. Same market, different objectives: suitability again.</div>
+    </div>
+</div>
+<div class="exam-lens">
+    <h3>Exam lens</h3>
+    <ul>
+        <li>Market = execution priority; limit = price priority.</li>
+        <li>Stop → market order when triggered; stop-limit → limit order when triggered.</li>
+        <li>Long positions use sell stops below the price; short positions use buy stops above it.</li>
+    </ul>
+</div>
+<div class="mini-check">
+    <h4>Quick check</h4>
+    <p>You short a stock at RM50 and fear a sharp rise. What order protects you?</p>
+    <button onclick="revealTeach('r-l3ord-4')">Reveal logic</button>
+    <div class="micro-answer" id="r-l3ord-4">A buy stop above the current price, for example at RM60: if the price reaches RM60, a buy order closes the short.</div>
+</div>
