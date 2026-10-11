@@ -77,6 +77,33 @@
             else if (ACTIONS[d.action]) ACTIONS[d.action]();
         });
         document.addEventListener('input', e => { if (e.target.matches('.toc-search')) tocFilter(e.target); });
+
+        // Formula Sheet: chapter chips, search and recall mode
+        function ffApply() {
+            const sec = document.getElementById('sec-formulas'); if (!sec) return;
+            const chip = sec.querySelector('.ff-chip.on'), ch = chip ? chip.dataset.ffChip : 'all';
+            const q = (sec.querySelector('#ff-search').value || '').trim().toLowerCase();
+            const inCh = el => ch === 'all' || el.dataset.ffCh.split(' ').includes(ch);
+            let shown = 0;
+            sec.querySelectorAll('.ff-card').forEach(c => { const hit = inCh(c) && (!q || c.dataset.ffText.includes(q)); c.hidden = !hit; if (hit) shown++; });
+            sec.querySelectorAll('.ff-tier').forEach(t => { t.hidden = !t.querySelector('.ff-card:not([hidden])'); });
+            sec.querySelectorAll('.ff-table tbody tr').forEach(r => { r.hidden = !inCh(r); });
+            sec.querySelector('.ff-empty').hidden = shown > 0;
+        }
+        document.addEventListener('click', e => {
+            const chip = e.target.closest('[data-ff-chip]');
+            if (chip) { chip.parentElement.querySelectorAll('.ff-chip').forEach(b => b.classList.toggle('on', b === chip)); ffApply(); return; }
+            const rec = e.target.closest('[data-ff-recall]');
+            if (rec) {
+                const list = document.querySelector('#sec-formulas .ff-list'), on = list.classList.toggle('recall');
+                rec.setAttribute('aria-pressed', String(on)); rec.textContent = on ? 'Recall mode: on' : 'Recall mode';
+                list.querySelectorAll('.ff-base.shown').forEach(b => b.classList.remove('shown'));
+                return;
+            }
+            const base = e.target.closest('.ff-base');
+            if (base && base.closest('.ff-list.recall')) base.classList.toggle('shown');
+        });
+        document.addEventListener('input', e => { if (e.target.id === 'ff-search') ffApply(); });
         document.addEventListener('change', e => { if (e.target.id === 'quiz-mode') updateModeNote(); });
 
         // Diagrams

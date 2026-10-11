@@ -88,6 +88,13 @@ const V = {
     sstd(a) { const m = V.mean(a); return Math.sqrt(a.reduce((s, x) => s + (x - m) ** 2, 0) / (a.length - 1)); },
     pct(n, d = 2) { return V.fmt(n * 100, d) + '%'; },
     rm(n, d = 2) { return (n < 0 ? '-RM' : 'RM') + V.fmt(Math.abs(n), d); },
+    // The same numbers written for KaTeX: thousands separators in braces, an escaped percent sign
+    tn(n, d = 2) { return Number.isFinite(n) ? (n < 0 ? '-' : '') + V.fmt(Math.abs(n), d).replace(/,/g, '{,}') : '\\infty'; },
+    tp(n, d = 2) { return V.tn(n * 100, d) + '\\%'; },
+    trm(n, d = 2) { return (n < 0 ? '-' : '') + '\\text{RM}' + V.tn(Math.abs(n), d); },
+    par(s) { return String(s).startsWith('-') ? '(' + s + ')' : s; },
+    // Set HTML that contains $...$ maths and typeset it (readouts are rewritten on every slider move)
+    math(el, html) { el.innerHTML = html; if (typeof renderMath === 'function') renderMath(el); },
     // Axes inside a plot box; returns scale functions X(v) and Y(v)
     chart(svg, o) {
         const { x0, x1, y0, y1 } = o, [xa, xb] = o.X, [ya, yb] = o.Y, r = V.rng(o.seed || 3);
@@ -214,8 +221,10 @@ ML_VIS.l1_bond_rate = function (root) {
         const p = price(rate);
         V.dot(svg, c.X(rate * 100), c.Y(p), V.C.rose, 7);
         V.text(svg, c.X(rate * 100) + 10, c.Y(p) - 16, V.rm(p), { size: 14, anchor: 'start', weight: 700, color: V.C.rose });
-        const rel = Math.abs(rate - coupon) < 1e-9 ? 'at <b>par</b>: the market rate equals the coupon rate' : rate > coupon ? `at a <b>discount</b>: new bonds pay ${V.pct(rate)}, so nobody pays full price for a 5% coupon` : `at a <b>premium</b>: new bonds pay only ${V.pct(rate)}, so the old 5% coupon is worth more`;
-        read.innerHTML = `A 10-year bond with a fixed 5% coupon (RM50 a year) trades ${rel}. Price = <b>${V.rm(p)}</b>. The cash flows never change; only the rate used to discount them does: <b>rates ↑ ⇒ bond prices ↓</b>.`;
+        const rel = Math.abs(rate - coupon) < 1e-9 ? 'at <b>par</b>: the market rate equals the coupon rate' : rate > coupon ? `at a <b>discount</b>: new bonds pay $${V.tp(rate)}$, so nobody pays full price for a $5\\%$ coupon` : `at a <b>premium</b>: new bonds pay only $${V.tp(rate)}$, so the old $5\\%$ coupon is worth more`;
+        V.math(read, `A 10-year bond with a fixed $5\\%$ coupon ($\\text{RM}50$ a year) trades ${rel}. Its price is the present value of the cash flows at the market rate $y = ${V.tp(rate)}$:` +
+            `$$P = \\sum_{t=1}^{10}\\frac{50}{(1+y)^t} + \\frac{1{,}000}{(1+y)^{10}} = \\boxed{${V.trm(p)}}$$` +
+            `The cash flows never change; only the rate used to discount them does: <b>$y\\uparrow \\Rightarrow P\\downarrow$</b>.`);
     }
     draw();
 };
@@ -241,18 +250,16 @@ ML_VIS.l1_real_return = function (root) {
             V.text(svg, x + 55, h >= 0 ? zero - h - 14 : zero - h + 16, V.pct(v), { size: 15, weight: 700, color: col });
             name.split('\n').forEach((t, j) => V.text(svg, x + 55, 222 + j * 16, t, { size: 13, color: '#475569' }));
         });
-        // maths for KaTeX: a percent sign must be escaped, and thousands separators need braces
-        const t = x => V.pct(x).replace('%', '\\%'), g = n => String(n).replace(/,/g, '{,}');
+        const t = x => V.tp(x);
         const on = k => mode === k ? 'font-weight:800' : 'opacity:.75';
         const wealth = 10000 * (1 + after), power = wealth / (1 + infl);
-        read.innerHTML =
+        V.math(read,
             `<div>Step 1, take the <b>after-tax</b> return, where $t$ is the tax rate: $$R_{\\text{after-tax}} = R_{\\text{nominal}}\\,(1-t) = ${t(nominal)} \\times ${V.fmt(1 - tax, 2)} = ${t(after)}$$</div>` +
             `<div>Step 2, remove inflation $i = ${t(infl)}$ in one of two ways:</div>` +
             `<div style="${on('approx')}">1. Quick approximation: $$R_{\\text{real}} \\approx R_{\\text{after-tax}} - i = ${t(after)} - ${t(infl)} = ${t(approx)}$$</div>` +
             `<div style="${on('fisher')}">2. Exact (Fisher equation): $$R_{\\text{real}} = \\frac{1+R_{\\text{after-tax}}}{1+i} - 1 = \\frac{${V.fmt(1 + after, 4)}}{${V.fmt(1 + infl, 4)}} - 1 = ${t(exact)}$$</div>` +
-            `<div>The approximation is ${approx >= exact ? 'higher' : 'lower'} than the exact answer by ${V.fmt(Math.abs(approx - exact) * 100, 3)} percentage points. The gap is small when inflation is low and grows as inflation rises.</div>` +
-            `<div>Check in ringgit: $\\text{RM}${g(V.fmt(10000, 0))}$ grows to $\\text{RM}${g(V.fmt(wealth, 2))}$, which buys what $\\dfrac{${g(V.fmt(wealth, 2))}}{${V.fmt(1 + infl, 4)}} = \\text{RM}${g(V.fmt(power, 2))}$ buys today. That is a true change of $${t(exact)}$, so the exact method is the one that matches the money. ${real < 0 ? 'Here purchasing power <b>falls</b> although the balance rises.' : ''}</div>`;
-        if (typeof renderMath === 'function') renderMath(read);
+            `<div>The approximation is ${approx >= exact ? 'higher' : 'lower'} than the exact answer by $${V.tn(Math.abs(approx - exact) * 100, 3)}$ percentage points. The gap is small when inflation is low and grows as inflation rises.</div>` +
+            `<div>Check in ringgit: $\\text{RM}10{,}000$ grows to $${V.trm(wealth)}$, which buys what $\\dfrac{${V.tn(wealth)}}{${V.fmt(1 + infl, 4)}} = ${V.trm(power)}$ buys today. That is a true change of $${t(exact)}$, so the exact method is the one that matches the money. ${real < 0 ? 'Here purchasing power <b>falls</b> although the balance rises.' : ''}</div>`);
     }
     draw();
 };
@@ -292,9 +299,9 @@ ML_VIS.l1_scorecard = function (root) {
         const rows = ROWS.map(([name, grades, rate]) => { const sc = grades.map(g => G[g]); return { name, grades, rate, sc, fit: sc.reduce((a, s, i) => a + s * W[i], 0) / sum }; });
         const best = DIMS.map((_, i) => Math.max(...rows.map(r => r.sc[i])));
         rows.sort((a, b) => b.fit - a.fit);
-        const cell = (r, i) => `<td style="background:${colour(r.sc[i])};text-align:center;${r.sc[i] === best[i] ? 'outline:2.5px solid #0f172a;outline-offset:-3px;font-weight:800' : ''}">${r.grades[i]}${i === 3 ? '<br><small>' + r.rate + '</small>' : ''}</td>`;
-        out.innerHTML = `<table class="vis-table"><tr><th>Instrument (best fit first)</th>${DIMS.map(d => `<th>${d}${d === 'Rate' ? ' (2012)' : ''}</th>`).join('')}<th>Fit for your goal</th></tr>` +
-            rows.map((r, k) => `<tr${k === 0 ? ' class="hl"' : ''}><td><b>${k === 0 ? '1st · ' : ''}${r.name}</b></td>${[0, 1, 2, 3].map(i => cell(r, i)).join('')}<td><div style="background:#e2e8f0;border-radius:99px;height:10px;width:110px"><div style="background:#4f46e5;border-radius:99px;height:10px;width:${Math.round(r.fit * 10)}%"></div></div><small>${V.fmt(r.fit, 1)} / 10</small></td></tr>`).join('') + '</table>';
+        const cell = (r, i) => `<td style="background:${colour(r.sc[i])};text-align:center;${r.sc[i] === best[i] ? 'outline:2.5px solid #0f172a;outline-offset:-3px;font-weight:800' : ''}">${r.grades[i]}${i === 3 ? '<br><small>$' + r.rate.replace('%', '\\%') + '$</small>' : ''}</td>`;
+        V.math(out, `<table class="vis-table"><tr><th>Instrument (best fit first)</th>${DIMS.map(d => `<th>${d}${d === 'Rate' ? ' (2012)' : ''}</th>`).join('')}<th>Fit for your goal</th></tr>` +
+            rows.map((r, k) => `<tr${k === 0 ? ' class="hl"' : ''}><td><b>${k === 0 ? '1st · ' : ''}${r.name}</b></td>${[0, 1, 2, 3].map(i => cell(r, i)).join('')}<td><div style="background:#e2e8f0;border-radius:99px;height:10px;width:110px"><div style="background:#4f46e5;border-radius:99px;height:10px;width:${Math.round(r.fit * 10)}%"></div></div><small>$${V.tn(r.fit, 1)}/10$</small></td></tr>`).join('') + '</table>');
         const winners = DIMS.map((d, i) => `${d.toLowerCase()}: <b>${rows.filter(r => r.sc[i] === best[i]).map(r => r.name.replace(/ \(.*\)/, '')).join(' / ')}</b>`);
         const all = rows.filter(r => r.sc.every((s, i) => s === best[i]));
         read.innerHTML = `Best fit for these priorities: <b>${rows[0].name}</b>. But the best instrument in each column differs: ${winners.join('; ')}. ` +
@@ -332,9 +339,10 @@ ML_VIS.l2_margin = function (root) {
         V.text(svg, 476, lineY + 15, V.rm(D / (1 - maint), 0), { size: 12, anchor: 'start', color: V.C.red });
         V.rline(svg, 30, base, 540, base, '#94a3b8', 1.2, r);
         V.text(svg, 280, 286, `margin now = (V - D) / V = ${V.pct(m, 1)}`, { size: 14, weight: 700, color: call ? V.C.red : V.C.green });
-        read.innerHTML = `Buy 100 shares at RM50 with ${V.pct(initial, 0)} initial margin: your equity is ${V.rm(E0, 0)} and the loan is ${V.rm(D, 0)}. At RM${price} the stock has moved <b>${V.pct(cash, 1)}</b>, but your return on equity is <b>${V.pct(roe, 1)}</b> (before interest). ` +
-            (call ? `<span class="vis-verdict bad">margin call</span> margin ${V.pct(m, 1)} is below the ${V.pct(maint, 0)} maintenance requirement.` : `<span class="vis-verdict good">no margin call</span> the call price is about <b>RM${V.fmt(crit, 2)}</b> = D / (shares x (1 - ${V.pct(maint, 0)})).`) +
-            (E <= 0 ? ' Equity is wiped out: the loss now exceeds your own money.' : '');
+        V.math(read, `Buy $100$ shares at $\\text{RM}50$ with $${V.tp(initial, 0)}$ initial margin: your equity is $E_0 = ${V.trm(E0, 0)}$ and the loan is $D = ${V.trm(D, 0)}$. At $\\text{RM}${price}$ the stock has moved <b>$${V.tp(cash, 1)}$</b>, but your return on equity (before interest) is` +
+            `$$\\frac{V - V_0}{E_0} = \\frac{${V.tn(Vn, 0)} - ${V.tn(V0, 0)}}{${V.tn(E0, 0)}} = \\boxed{${V.tp(roe, 1)}}$$` +
+            (call ? `<span class="vis-verdict bad">margin call</span> margin $\\dfrac{V-D}{V} = ${V.tp(m, 1)}$ is below the $${V.tp(maint, 0)}$ maintenance requirement.` : `<span class="vis-verdict good">no margin call</span> the call price is about <b>$\\text{RM}${V.tn(crit, 2)}$</b>: $P^* = \\dfrac{D}{N(1-m)} = \\dfrac{${V.tn(D, 0)}}{100(1-${V.fmt(maint, 2)})}$.`) +
+            (E <= 0 ? ' Equity is wiped out: the loss now exceeds your own money.' : ''));
     }
     draw();
 };
@@ -355,9 +363,10 @@ ML_VIS.l2_short = function (root) {
         const sp = shares * (sold - price), lp = shares * (price - sold);
         V.dot(svg, c.X(price), c.Y(sp), V.C.rose); V.dot(svg, c.X(price), c.Y(lp), V.C.sky);
         const equity = 7500 - shares * price, m = price ? equity / (shares * price) : Infinity;
-        read.innerHTML = `Short 100 borrowed shares at RM50 (proceeds RM5,000, plus a RM2,500 margin deposit). At RM${price}: short profit <b>${V.rm(sp, 0)}</b>, long profit ${V.rm(lp, 0)}. ` +
-            `The short's best case is <b>RM5,000</b> (price falls to 0); there is no worst case, because the price can keep rising. ` +
-            `Short-account margin = (RM7,500 - cost to buy back) / cost to buy back = <b>${price ? V.pct(m, 1) : '∞'}</b>${price && m < 0.3 ? ' <span class="vis-verdict bad">below 30%: margin call</span>' : ''}.`;
+        V.math(read, `Short $100$ borrowed shares at $\\text{RM}50$ (proceeds $\\text{RM}5{,}000$, plus a $\\text{RM}2{,}500$ margin deposit). At $\\text{RM}${price}$:` +
+            `$$\\text{Short profit} = (P_{\\text{sell}} - P_{\\text{now}})\\times N = (50 - ${price})\\times 100 = \\boxed{${V.trm(sp, 0)}}$$` +
+            `while the long position would make $${V.trm(lp, 0)}$. The short's best case is <b>$\\text{RM}5{,}000$</b> (the price falls to $0$); there is no worst case, because the price can keep rising. ` +
+            `Short-account margin $= \\dfrac{\\text{funds held} - \\text{cost to buy back}}{\\text{cost to buy back}} = \\dfrac{7{,}500 - ${V.tn(shares * price, 0)}}{${V.tn(shares * price, 0)}} = $ <b>$${price ? V.tp(m, 1) : '\\infty'}$</b>${price && m < 0.3 ? ' <span class="vis-verdict bad">below $30\\%$: margin call</span>' : ''}.`);
     }
     draw();
 };
@@ -367,7 +376,7 @@ ML_VIS.l2_underwrite = function (root) {
     const N = 10, offer = 10, paid = 9.4;
     let p = 10;
     const svg = V.svg(620, 300), read = V.h('p', { class: 'vis-readout' });
-    root.append(V.h('p', { class: 'vis-note' }, 'TechCo sells 10 million new shares. The bank agrees to pay RM9.40 a share and offers them to the public at RM10.00. Drag the slider to change what the public is actually willing to pay.'),
+    root.append(V.h('p', { class: 'vis-note' }, 'TechCo sells $10$ million new shares. The bank agrees to pay $\\text{RM}9.40$ a share and offers them to the public at $\\text{RM}10.00$. Drag the slider to change what the public is actually willing to pay.'),
         V.h('div', { class: 'vis-row' }, V.slider('price the public will pay', 7, 12, 0.1, p, v => { p = v; draw(); }, v => 'RM' + v.toFixed(2))), svg, read);
     function draw() {
         V.clear(svg);
@@ -389,12 +398,13 @@ ML_VIS.l2_underwrite = function (root) {
             V.text(svg, x + 60, 272, name, { size: 13, weight: 700, color: '#334155' });
             V.text(svg, x + 60, 290, sub, { size: 12, color: '#64748b' });
         });
-        const pr = 'RM' + p.toFixed(2);
+        const pr = '$\\text{RM}' + p.toFixed(2) + '$', m = x => `$\\text{RM}${V.tn(x, 1)}\\text{m}$`;
+        const bankLine = `$$\\text{Bank's result} = (P_{\\text{resale}} - P_{\\text{paid}})\\times N = (${sell.toFixed(2)} - 9.40)\\times 10\\text{m} = \\boxed{${V.trm(bank, 1)}\\text{m}}$$`;
         let msg;
-        if (p >= offer) msg = `Demand is strong: every share sells at the RM10.00 offer price${p > offer ? ' (investors would pay ' + pr + ', so the shares are likely to rise once trading starts)' : ''}. Alone, TechCo would have raised RM100m; with the underwriter it gets RM94m and the bank keeps the <b>RM6m spread</b>. In hindsight the underwriter cost RM6m, like an insurance premium paid in a year with no accident.`;
-        else if (p >= paid) msg = `Demand is a little weak: the shares only sell at ${pr}. Alone, TechCo would raise RM${V.fmt(alone, 1)}m. With the underwriter it still gets RM94m; the bank's profit shrinks to RM${V.fmt(bank, 1)}m.`;
-        else msg = `Demand is weak: the public pays only ${pr}. Alone, TechCo would raise just RM${V.fmt(alone, 1)}m, <b>RM${V.fmt(100 - alone, 1)}m short</b> of its target. With the underwriter TechCo still gets <b>RM94m</b>, and the <b>bank loses RM${V.fmt(-bank, 1)}m</b>: that loss is the risk it was paid to carry.`;
-        read.innerHTML = msg + ' Notice the green bar never moves: <b>certainty is what underwriting sells</b>.';
+        if (p >= offer) msg = `Demand is strong: every share sells at the $\\text{RM}10.00$ offer price${p > offer ? ' (investors would pay ' + pr + ', so the shares are likely to rise once trading starts)' : ''}. Alone, TechCo would have raised ${m(100)}; with the underwriter it gets ${m(94)} and the bank keeps the <b>${m(6)} spread</b>.${bankLine}In hindsight the underwriter cost ${m(6)}, like an insurance premium paid in a year with no accident.`;
+        else if (p >= paid) msg = `Demand is a little weak: the shares only sell at ${pr}. Alone, TechCo would raise ${m(alone)}. With the underwriter it still gets ${m(94)}, and the bank's profit shrinks:${bankLine}`;
+        else msg = `Demand is weak: the public pays only ${pr}. Alone, TechCo would raise just ${m(alone)}, <b>${m(100 - alone)} short</b> of its target. With the underwriter TechCo still gets <b>${m(94)}</b>, and the bank takes the loss:${bankLine}That loss is the risk it was paid to carry.`;
+        V.math(read, msg + ' Notice the green bar never moves: <b>certainty is what underwriting sells</b>.');
     }
     draw();
 };
@@ -414,7 +424,7 @@ ML_VIS.l3_index = function (root) {
         const cap0 = stocks.map((s, i) => p0[i] * s.shares), cap1 = stocks.map((s, i) => p1[i] * s.shares);
         const sum = a => a.reduce((x, y) => x + y, 0);
         const priceW = sum(p1) / sum(p0) - 1, valueW = sum(cap1) / sum(cap0) - 1, equalW = V.mean(chg);
-        table.innerHTML = `<table class="vis-table"><tr><th>stock</th><th>price</th><th>shares (m)</th><th>market value (RMm)</th><th>price weight</th><th>value weight</th></tr>${stocks.map((s, i) => `<tr><td>${s.name}</td><td>RM${V.fmt(p1[i], 2)}</td><td>${V.fmt(s.shares, 0)}</td><td>${V.fmt(cap1[i], 0)}</td><td>${V.pct(p0[i] / sum(p0), 0)}</td><td>${V.pct(cap0[i] / sum(cap0), 0)}</td></tr>`).join('')}</table>`;
+        V.math(table, `<table class="vis-table"><tr><th>stock</th><th>price</th><th>shares (m)</th><th>market value (RMm)</th><th>price weight</th><th>value weight</th></tr>${stocks.map((s, i) => `<tr><td>${s.name}</td><td>$${V.trm(p1[i], 2)}$</td><td>$${V.tn(s.shares, 0)}$</td><td>$${V.tn(cap1[i], 0)}$</td><td>$${V.tp(p0[i] / sum(p0), 0)}$</td><td>$${V.tp(cap0[i] / sum(cap0), 0)}$</td></tr>`).join('')}</table>`);
         V.clear(svg);
         const r = V.rng(4), zero = 125, k = 220;
         V.rline(svg, 30, zero, 540, zero, '#94a3b8', 1.4, r);
@@ -425,7 +435,10 @@ ML_VIS.l3_index = function (root) {
             t.split('\n').forEach((s, j) => V.text(svg, x + 55, 212 + j * 16, s, { size: 13, color: '#475569' }));
         });
         const big = [Math.abs(priceW), Math.abs(valueW), Math.abs(equalW)];
-        read.innerHTML = `Same three stocks, same price moves, three different "market" returns. A price-weighted average is dominated by the <b>highest-priced</b> stock (TinyCo), a value-weighted index by the <b>largest company</b> (MegaBank), and an equal-weighted index treats every stock alike. ${Math.max(...big) - Math.min(...big) > 0.02 ? 'Here the indexes disagree by more than 2 percentage points, so benchmark choice changes the verdict on a portfolio.' : 'Move one stock at a time to see which index it drives.'}`;
+        const sg = v => (v > 0 ? '+' : '') + V.tp(v, 2);
+        V.math(read, `Same three stocks, same price moves, three different "market" returns:` +
+            `$$\\begin{aligned}\\text{price-weighted} &= \\frac{\\sum P_1}{\\sum P_0} - 1 = ${sg(priceW)} \\\\ \\text{value-weighted} &= \\frac{\\sum P_1Q}{\\sum P_0Q} - 1 = ${sg(valueW)} \\\\ \\text{equal-weighted} &= \\frac{1}{n}\\sum R_i = ${sg(equalW)}\\end{aligned}$$` +
+            `A price-weighted average is dominated by the <b>highest-priced</b> stock (TinyCo), a value-weighted index by the <b>largest company</b> (MegaBank), and an equal-weighted index treats every stock alike. ${Math.max(...big) - Math.min(...big) > 0.02 ? 'Here the indexes disagree by more than $2$ percentage points, so benchmark choice changes the verdict on a portfolio.' : 'Move one stock at a time to see which index it drives.'}`);
     }
     draw();
 };
@@ -452,8 +465,10 @@ ML_VIS.l4_compound = function (root) {
         V.text(svg, c.X(years) - 4, c.Y(fvC(years)) - 12, 'compound ' + V.rm(fvC(years), 0), { size: 13, weight: 700, anchor: 'end', color: V.C.green });
         V.text(svg, c.X(years) - 4, c.Y(fvS(years)) + 16, 'simple ' + V.rm(fvS(years), 0), { size: 13, weight: 700, anchor: 'end', color: V.C.slate });
         const ear = (1 + rate / m) ** m - 1;
-        read.innerHTML = `FV = PV(1 + r/m)<sup>mt</sup> = ${V.rm(pv, 0)} x (1 + ${V.pct(rate, 1)}/${m})<sup>${m}x${years}</sup> = <b>${V.rm(fvC(years))}</b>. Simple interest would give ${V.rm(fvS(years))}; the shaded gap of <b>${V.rm(fvC(years) - fvS(years))}</b> is interest earned on interest. ` +
-            `True (effective) annual rate = (1 + r/m)<sup>m</sup> - 1 = <b>${V.pct(ear, 3)}</b>${m > 1 ? ` versus the stated ${V.pct(rate, 1)}` : ''}.`;
+        V.math(read, `$$FV = PV\\left(1+\\frac{r}{m}\\right)^{mt} = ${V.trm(pv, 0)}\\left(1+\\frac{${V.tp(rate, 1)}}{${m}}\\right)^{${m}\\times${years}} = \\boxed{${V.trm(fvC(years))}}$$` +
+            `Simple interest would give $PV(1+rt) = ${V.trm(fvS(years))}$; the shaded gap of <b>$${V.trm(fvC(years) - fvS(years))}$</b> is interest earned on interest. True (effective) annual rate:` +
+            `$$EAR = \\left(1+\\frac{r}{m}\\right)^{m} - 1 = \\left(1+\\frac{${V.tp(rate, 1)}}{${m}}\\right)^{${m}} - 1 = \\boxed{${V.tp(ear, 3)}}$$` +
+            (m > 1 ? `versus the stated $${V.tp(rate, 1)}$: compounding more often raises the true rate.` : 'With annual compounding the effective rate equals the stated rate.'));
     }
     draw();
 };
@@ -482,9 +497,9 @@ ML_VIS.l4_annuity = function (root) {
         });
         V.text(svg, 300, 22, 'blue = the deposit · amber = the interest it earns by the end of year ' + n, { size: 13, color: '#475569' });
         const factor = rate ? ((1 + rate) ** n - 1) / rate : n;
-        read.innerHTML = `${due ? 'Annuity due: each payment arrives at the <b>start</b> of the year, so every payment compounds one extra year. ' : 'Ordinary annuity: payments at the <b>end</b> of each year; the last one earns nothing. '}` +
-            `FV = PMT x [(1 + r)<sup>n</sup> - 1] / r${due ? ' x (1 + r)' : ''} = ${V.rm(pmt, 0)} x ${V.fmt(factor * (due ? 1 + rate : 1), 4)} = <b>${V.rm(fv)}</b> from ${V.rm(pmt * n, 0)} deposited. ` +
-            `Its present value today is <b>${V.rm(pv)}</b>. Earlier payments grow most: they have the most years to compound.`;
+        V.math(read, `${due ? 'Annuity due: each payment arrives at the <b>start</b> of the year, so every payment compounds one extra year.' : 'Ordinary annuity: payments at the <b>end</b> of each year; the last one earns nothing.'}` +
+            `$$FV = PMT\\left[\\frac{(1+r)^n - 1}{r}\\right]${due ? '(1+r)' : ''} = ${V.trm(pmt, 0)} \\times ${V.tn(factor * (due ? 1 + rate : 1), 4)} = \\boxed{${V.trm(fv)}}$$` +
+            `from $${V.trm(pmt * n, 0)}$ deposited. Its present value today is <b>$PV = \\dfrac{FV}{(1+r)^n} = ${V.trm(pv)}$</b>. Earlier payments grow most: they have the most years to compound.`);
     }
     draw();
 };
@@ -506,10 +521,11 @@ ML_VIS.l4_risk = function (root) {
             V.text(svg, 30, y, k, { size: 18, weight: 700, color: c });
         });
         [lo, 0, hi].forEach(t => V.text(svg, X(t), 214, V.fmt(t, 0) + '%', { size: 12, color: '#64748b' }));
-        const cv = S => Number.isFinite(S.cv) ? V.fmt(S.cv, 2) : 'undefined (mean 0)';
-        read.innerHTML = `Shaded band = mean ± 1 standard deviation (sample, n - 1). ` +
-            `<b>A</b>: mean ${V.fmt(A.m, 2)}%, σ = ${V.fmt(A.s, 2)}%, CV = ${cv(A)}. <b>B</b>: mean ${V.fmt(B.m, 2)}%, σ = ${V.fmt(B.s, 2)}%, CV = ${cv(B)}. ` +
-            `σ measures <b>absolute</b> dispersion; CV = σ / mean measures risk <b>per unit of return</b>, so it is the fairer comparison when the averages differ.`;
+        const cv = S => Number.isFinite(S.cv) ? V.tn(S.cv, 2) : '\\text{undefined (mean } 0)';
+        const line = (k, S) => `\\text{${k}:}\\quad \\bar R = ${V.tn(S.m, 2)}\\%, \\quad s = \\sqrt{\\frac{\\sum (R_t - \\bar R)^2}{n-1}} = ${V.tn(S.s, 2)}\\%, \\quad CV = \\frac{s}{\\bar R} = ${cv(S)}`;
+        V.math(read, `Shaded band = mean $\\pm 1$ standard deviation (sample, $n - 1$).` +
+            `$$\\begin{aligned}&${line('A', A)} \\\\ &${line('B', B)}\\end{aligned}$$` +
+            `$s$ measures <b>absolute</b> dispersion; $CV = \\dfrac{s}{\\bar R}$ measures risk <b>per unit of return</b>, so it is the fairer comparison when the averages differ.`);
     }
     draw();
 };
@@ -537,8 +553,11 @@ ML_VIS.l5_correlation = function (root) {
         const sp = sigmaP(w, rho), er = w * PORT.eA + (1 - w) * PORT.eB, avg = w * PORT.sA + (1 - w) * PORT.sB;
         V.dot(svg, c.X(sp), c.Y(er), V.C.amber, 7, V.C.amberS);
         const den = PORT.sA ** 2 + PORT.sB ** 2 - 2 * rho * PORT.sA * PORT.sB, wMin = den > 1e-12 ? Math.min(1, Math.max(0, (PORT.sB ** 2 - rho * PORT.sA * PORT.sB) / den)) : 0.5;
-        read.innerHTML = `A: E(R) = 12%, σ = 20%. B: E(R) = 6%, σ = 10%. With ${V.pct(w, 0)} in A and ρ = ${rho.toFixed(2)}: E(R<sub>p</sub>) = <b>${V.pct(er)}</b> (always the weighted average) but σ<sub>p</sub> = <b>${V.pct(sp)}</b>, versus the ${V.pct(avg)} you would get by averaging the σs. ` +
-            `The diversification benefit is <b>${V.pct(avg - sp)}</b>; it is zero only when ρ = +1. Lowest-risk mix at this ρ: about ${V.pct(wMin, 0)} in A (σ<sub>p</sub> = ${V.pct(sigmaP(wMin, rho))}).`;
+        const wa = V.fmt(w, 2), wb = V.fmt(1 - w, 2), rr = V.par(rho.toFixed(2));
+        V.math(read, `A: $E(R_A) = 12\\%$, $\\sigma_A = 20\\%$. B: $E(R_B) = 6\\%$, $\\sigma_B = 10\\%$. With $w_A = ${wa}$ and $\\rho = ${rho.toFixed(2)}$:` +
+            `$$E(R_p) = w_AE(R_A) + w_BE(R_B) = ${wa}(12\\%) + ${wb}(6\\%) = \\boxed{${V.tp(er)}}$$` +
+            `$$\\sigma_p = \\sqrt{w_A^2\\sigma_A^2 + w_B^2\\sigma_B^2 + 2w_Aw_B\\sigma_A\\sigma_B\\rho} = \\sqrt{${wa}^2(0.20)^2 + ${wb}^2(0.10)^2 + 2(${wa})(${wb})(0.20)(0.10)${rr}} = \\boxed{${V.tp(sp)}}$$` +
+            `$E(R_p)$ is always the weighted average, but $\\sigma_p$ is not: averaging the $\\sigma$s would give $${V.tp(avg)}$. The diversification benefit is <b>$${V.tp(avg - sp)}$</b>; it is zero only when $\\rho = +1$. Lowest-risk mix at this $\\rho$: about $w_A = ${V.tp(wMin, 0)}$ ($\\sigma_p = ${V.tp(sigmaP(wMin, rho))}$).`);
     }
     draw();
 };
@@ -565,14 +584,15 @@ ML_VIS.l5_sml = function (root) {
         V.dot(svg, c.X(beta), c.Y(R), V.C.green, 5, V.C.greenS);
         V.dot(svg, c.X(beta), c.Y(er), V.C.amber, 7, V.C.amberS);
         const verdict = Math.abs(alpha) < 0.0005 ? '<span class="vis-verdict even">on the SML</span> fairly priced' : alpha > 0 ? '<span class="vis-verdict good">above the SML</span> potentially undervalued' : '<span class="vis-verdict bad">below the SML</span> potentially overvalued';
-        read.innerHTML = `Required return = R<sub>f</sub> + β(E(R<sub>m</sub>) - R<sub>f</sub>) = ${V.pct(rf, 1)} + ${beta.toFixed(2)} x ${V.pct(rm - rf, 1)} = <b>${V.pct(R)}</b>. Your estimate ${V.pct(er, 1)} gives expected alpha <b>${(alpha >= 0 ? '+' : '') + V.pct(alpha)}</b>: ${verdict}. ` +
-            `${beta < 0 ? 'A negative beta moves against the market, so CAPM asks for <b>less</b> than the risk-free rate: the hedge itself is valuable. ' : ''}Alpha is only as good as the expected-return estimate behind it.`;
+        V.math(read, `$$R = R_f + \\beta\\left[E(R_m) - R_f\\right] = ${V.tp(rf, 1)} + ${V.par(beta.toFixed(2))}\\times${V.par(V.tp(rm - rf, 1))} = \\boxed{${V.tp(R)}}$$` +
+            `Your estimate $${V.tp(er, 1)}$ gives expected alpha <b>$\\alpha = E(R) - R = ${(alpha >= 0 ? '+' : '') + V.tp(alpha)}$</b>: ${verdict}. ` +
+            `${beta < 0 ? 'A negative beta moves against the market, so CAPM asks for <b>less</b> than the risk-free rate: the hedge itself is valuable. ' : ''}Alpha is only as good as the expected-return estimate behind it.`);
     }
     draw();
 };
 
 ML_VIS.l5_sigma3d = async function (root) {
-    let rho = -1;
+    let rho = -1, line = null, ready = false;   // declared before the first await, so an early slider move cannot hit them uninitialised
     const read = V.h('p', { class: 'vis-readout' });
     root.append(V.h('div', { class: 'vis-row' }, V.slider('highlight correlation ρ', -1, 1, 0.1, rho, v => { rho = v; slice(); }, v => (v > 0 ? '+' : '') + v.toFixed(1))), read);
     const S = await V.scene3d(root, { radius: 6.2, phi: 1.05, theta: 0.65, target: [0, 0.5, 0], label: 'Portfolio standard deviation for every weight and correlation' });
@@ -594,13 +614,14 @@ ML_VIS.l5_sigma3d = async function (root) {
     const zeroPt = new THREE.Mesh(new THREE.SphereGeometry(0.08, 16, 12), new THREE.MeshLambertMaterial({ color: 0xd97706 }));
     zeroPt.position.set((1 / 3 - 0.5) * sz, 0, o); scene.add(zeroPt);
     const zl = V.label3d(THREE, 'σp = 0 at w = 1/3, ρ = -1', '#b45309', 0.24); zl.position.set((1 / 3 - 0.5) * sz + 0.9, 0.7, o + 0.5); scene.add(zl);
-    let line = null;
     function slice() {
+        if (!ready) return;
         if (line) scene.remove(line);
         const pts = []; for (let i = 0; i <= 40; i++) { const w = i / 40; pts.push([(w - 0.5) * sz, sigmaP(w, rho) * 100 * k + 0.02, rho / 2 * sz]); }
         line = V.line3d(THREE, pts, 0xe11d48); scene.add(line); S.dirty();
         const den = PORT.sA ** 2 + PORT.sB ** 2 - 2 * rho * PORT.sA * PORT.sB, wMin = Math.min(1, Math.max(0, (PORT.sB ** 2 - rho * PORT.sA * PORT.sB) / den));
-        read.innerHTML = `Height = portfolio σ for A (σ = 20%) and B (σ = 10%). The red slice is ρ = ${rho.toFixed(1)}: its lowest point is about <b>${V.pct(wMin, 0)}</b> in A, σ<sub>p</sub> = <b>${V.pct(sigmaP(wMin, rho))}</b>. Move ρ down and the whole valley sinks; only at ρ = -1 with w = 1/3 does risk reach zero.`;
+        V.math(read, `Height = portfolio $\\sigma_p$ for A ($\\sigma_A = 20\\%$) and B ($\\sigma_B = 10\\%$). The red slice is $\\rho = ${rho.toFixed(1)}$: its lowest point is about <b>$w_A = ${V.tp(wMin, 0)}$</b>, where <b>$\\sigma_p = ${V.tp(sigmaP(wMin, rho))}$</b>. Move $\\rho$ down and the whole valley sinks; only at $\\rho = -1$ with $w_A = \\tfrac{1}{3}$ does risk reach zero.`);
     }
+    ready = true;
     slice();
 };
