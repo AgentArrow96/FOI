@@ -221,16 +221,18 @@ ML_VIS.l1_bond_rate = function (root) {
 };
 
 ML_VIS.l1_real_return = function (root) {
-    let nominal = 0.08, tax = 0.25, infl = 0.04;
-    const svg = V.svg(560, 250), read = V.h('p', { class: 'vis-readout' });
+    let nominal = 0.08, tax = 0.25, infl = 0.04, mode = 'approx';
+    const svg = V.svg(560, 250), read = V.h('div', { class: 'vis-readout' });
     root.append(V.h('div', { class: 'vis-row' },
         V.slider('nominal return', 0, 20, 0.5, nominal * 100, v => { nominal = v / 100; draw(); }, v => v + '%'),
         V.slider('tax on returns', 0, 40, 1, tax * 100, v => { tax = v / 100; draw(); }, v => v + '%'),
-        V.slider('inflation', 0, 12, 0.5, infl * 100, v => { infl = v / 100; draw(); }, v => v + '%')), svg, read);
+        V.slider('inflation', 0, 12, 0.5, infl * 100, v => { infl = v / 100; draw(); }, v => v + '%')),
+        V.seg([['approx', 'Quick approximation (the chapter\'s formula)'], ['fisher', 'Exact (Fisher equation)']], mode, v => { mode = v; draw(); }), svg, read);
     function draw() {
         V.clear(svg);
-        const after = nominal * (1 - tax), real = (1 + after) / (1 + infl) - 1;
-        const bars = [['nominal', nominal, V.C.sky, V.C.skyS], ['after tax', after, V.C.indigo, V.C.indigoS], ['real (after tax\nand inflation)', real, real >= 0 ? V.C.green : V.C.red, real >= 0 ? V.C.greenS : '#fee2e2']];
+        const after = nominal * (1 - tax), approx = after - infl, exact = (1 + after) / (1 + infl) - 1, real = mode === 'approx' ? approx : exact;
+        const bars = [['nominal', nominal, V.C.sky, V.C.skyS], ['after tax', after, V.C.indigo, V.C.indigoS],
+            [(mode === 'approx' ? 'real: approximation' : 'real: exact (Fisher)') + '\n(after tax and inflation)', real, real >= 0 ? V.C.green : V.C.red, real >= 0 ? V.C.greenS : '#fee2e2']];
         const zero = 150, k = 520, r = V.rng(5);
         V.rline(svg, 40, zero, 540, zero, '#94a3b8', 1.4, r);
         bars.forEach(([name, v, col, fill], i) => {
@@ -239,8 +241,18 @@ ML_VIS.l1_real_return = function (root) {
             V.text(svg, x + 55, h >= 0 ? zero - h - 14 : zero - h + 16, V.pct(v), { size: 15, weight: 700, color: col });
             name.split('\n').forEach((t, j) => V.text(svg, x + 55, 222 + j * 16, t, { size: 13, color: '#475569' }));
         });
-        const keep = 10000 * after, lost = 10000 * (1 + after) / (1 + infl);
-        read.innerHTML = `On RM10,000 the account grows by <b>${V.rm(keep)}</b> after tax, but in today's purchasing power it is worth <b>${V.rm(lost)}</b>. Real return ≈ after-tax return - inflation = <b>${V.pct(real)}</b>. ${real < 0 ? 'The balance rises while purchasing power <b>falls</b>: "safe" in ringgit is not safe in real terms.' : 'What matters is what the investor keeps, in real terms.'}`;
+        // maths for KaTeX: a percent sign must be escaped, and thousands separators need braces
+        const t = x => V.pct(x).replace('%', '\\%'), g = n => String(n).replace(/,/g, '{,}');
+        const on = k => mode === k ? 'font-weight:800' : 'opacity:.75';
+        const wealth = 10000 * (1 + after), power = wealth / (1 + infl);
+        read.innerHTML =
+            `<div>Step 1, take the <b>after-tax</b> return, where $t$ is the tax rate: $$R_{\\text{after-tax}} = R_{\\text{nominal}}\\,(1-t) = ${t(nominal)} \\times ${V.fmt(1 - tax, 2)} = ${t(after)}$$</div>` +
+            `<div>Step 2, remove inflation $i = ${t(infl)}$ in one of two ways:</div>` +
+            `<div style="${on('approx')}">1. Quick approximation: $$R_{\\text{real}} \\approx R_{\\text{after-tax}} - i = ${t(after)} - ${t(infl)} = ${t(approx)}$$</div>` +
+            `<div style="${on('fisher')}">2. Exact (Fisher equation): $$R_{\\text{real}} = \\frac{1+R_{\\text{after-tax}}}{1+i} - 1 = \\frac{${V.fmt(1 + after, 4)}}{${V.fmt(1 + infl, 4)}} - 1 = ${t(exact)}$$</div>` +
+            `<div>The approximation is ${approx >= exact ? 'higher' : 'lower'} than the exact answer by ${V.fmt(Math.abs(approx - exact) * 100, 3)} percentage points. The gap is small when inflation is low and grows as inflation rises.</div>` +
+            `<div>Check in ringgit: $\\text{RM}${g(V.fmt(10000, 0))}$ grows to $\\text{RM}${g(V.fmt(wealth, 2))}$, which buys what $\\dfrac{${g(V.fmt(wealth, 2))}}{${V.fmt(1 + infl, 4)}} = \\text{RM}${g(V.fmt(power, 2))}$ buys today. That is a true change of $${t(exact)}$, so the exact method is the one that matches the money. ${real < 0 ? 'Here purchasing power <b>falls</b> although the balance rises.' : ''}</div>`;
+        if (typeof renderMath === 'function') renderMath(read);
     }
     draw();
 };

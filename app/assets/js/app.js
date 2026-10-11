@@ -273,7 +273,7 @@
             document.getElementById('quiz-progress').style.width = '100%'; updateQuizStats();
         }
 
-        const LAST_UPDATED_REPO = '', LAST_UPDATED_BRANCH = 'main', LAST_UPDATED_CACHE_KEY = 'foiLastPushISO';
+        const LAST_UPDATED_REPO = 'AgentArrow96/FOI', LAST_UPDATED_BRANCH = 'main', LAST_UPDATED_CACHE_KEY = 'foiLastPushISO';
         let lastPushDate = null;
         function relativeTimeFrom(date) {
             const sec = Math.floor((Date.now() - date.getTime()) / 1000);
