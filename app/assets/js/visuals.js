@@ -256,6 +256,52 @@ ML_VIS.l1_real_return = function (root) {
     }
     draw();
 };
+
+ML_VIS.l1_scorecard = function (root) {
+    // Slide 38 (Table 1.4): letter grades turned into a 0-10 scale, in order of quality
+    const G = { 'A++': 10, 'A+': 9, 'A/A+': 8.5, 'A': 8, 'A±': 7.5, 'A-': 7, 'B+': 6, 'B': 5, 'B-': 4, 'C': 3, 'C-': 2, 'D': 1, 'F': 0 };
+    const DIMS = ['Availability', 'Safety', 'Liquidity', 'Rate'];
+    const ROWS = [
+        ['Passbook savings account', ['A+', 'A+', 'A', 'D'], '0.10%'],
+        ['NOW account', ['A-', 'A+', 'A+', 'F'], '0.05%'],
+        ['Money market deposit account', ['B', 'A+', 'A', 'C'], '0.15%'],
+        ['Asset management account', ['B-', 'A', 'A+', 'B'], '0.20%'],
+        ['I bonds', ['A+', 'A++', 'C-', 'A'], '1.50%'],
+        ['U.S. Treasury bill (1 year)', ['B-', 'A++', 'A-', 'B'], '0.20%'],
+        ['Certificate of deposit (1 year)', ['B', 'A±', 'B', 'A-'], '1.00%'],
+        ['Commercial paper (90 day)', ['B-', 'A-', 'B-', 'A-'], '0.70%'],
+        ["Banker's acceptance (90 day)", ['B-', 'A', 'B', 'B+'], '0.40%'],
+        ['Money market mutual fund', ['B', 'A/A+', 'B+', 'B'], '0.20%'],
+    ];
+    const PRESETS = [
+        ['balanced', 'Balanced', [1, 1, 1, 1]],
+        ['emergency', 'Emergency fund', [2, 2, 3, 0.5]],
+        ['safe', 'Park cash safely', [1, 4, 1, 0.5]],
+        ['yield', 'Chase yield', [1, 1, 1, 4]],
+    ];
+    let W = [1, 1, 1, 1];
+    const sliders = DIMS.map((d, i) => V.slider(d, 0, 5, 0.5, W[i], v => { W[i] = v; draw(); }, v => v));
+    const setW = w => { W = w.slice(); sliders.forEach((s, i) => { s.input.value = W[i]; s.querySelector('output').textContent = W[i]; }); draw(); };
+    const out = V.h('div', { class: 'vis-table-wrap' }), read = V.h('p', { class: 'vis-readout' });
+    root.append(V.h('p', { class: 'vis-note' }, 'What matters most to you? Pick a goal or set the four importance sliders. Cells are coloured by grade (green = best, red = worst); an outline marks the best instrument in that column.'),
+        V.seg(PRESETS.map(p => [p[0], p[1]]), 'balanced', v => setW(PRESETS.find(p => p[0] === v)[2])),
+        V.h('div', { class: 'vis-row' }, ...sliders), out, read);
+    const colour = s => `hsl(${Math.round(s / 10 * 125)},62%,${86 - Math.round(Math.abs(s - 5) * 1.2)}%)`;
+    function draw() {
+        const sum = W.reduce((a, b) => a + b, 0) || 1;
+        const rows = ROWS.map(([name, grades, rate]) => { const sc = grades.map(g => G[g]); return { name, grades, rate, sc, fit: sc.reduce((a, s, i) => a + s * W[i], 0) / sum }; });
+        const best = DIMS.map((_, i) => Math.max(...rows.map(r => r.sc[i])));
+        rows.sort((a, b) => b.fit - a.fit);
+        const cell = (r, i) => `<td style="background:${colour(r.sc[i])};text-align:center;${r.sc[i] === best[i] ? 'outline:2.5px solid #0f172a;outline-offset:-3px;font-weight:800' : ''}">${r.grades[i]}${i === 3 ? '<br><small>' + r.rate + '</small>' : ''}</td>`;
+        out.innerHTML = `<table class="vis-table"><tr><th>Instrument (best fit first)</th>${DIMS.map(d => `<th>${d}${d === 'Rate' ? ' (2012)' : ''}</th>`).join('')}<th>Fit for your goal</th></tr>` +
+            rows.map((r, k) => `<tr${k === 0 ? ' class="hl"' : ''}><td><b>${k === 0 ? '1st · ' : ''}${r.name}</b></td>${[0, 1, 2, 3].map(i => cell(r, i)).join('')}<td><div style="background:#e2e8f0;border-radius:99px;height:10px;width:110px"><div style="background:#4f46e5;border-radius:99px;height:10px;width:${Math.round(r.fit * 10)}%"></div></div><small>${V.fmt(r.fit, 1)} / 10</small></td></tr>`).join('') + '</table>';
+        const winners = DIMS.map((d, i) => `${d.toLowerCase()}: <b>${rows.filter(r => r.sc[i] === best[i]).map(r => r.name.replace(/ \(.*\)/, '')).join(' / ')}</b>`);
+        const all = rows.filter(r => r.sc.every((s, i) => s === best[i]));
+        read.innerHTML = `Best fit for these priorities: <b>${rows[0].name}</b>. But the best instrument in each column differs: ${winners.join('; ')}. ` +
+            (all.length ? `<b>${all[0].name}</b> is best on every dimension.` : 'No instrument is outlined in all four columns, so there is <b>no overall winner</b>: change the priorities and the ranking changes. That trade-off, not "instrument X is best", is the lesson.');
+    }
+    draw();
+};
 // Chapter 2 visuals
 ML_VIS.l2_margin = function (root) {
     const shares = 100, buy = 50;
@@ -312,6 +358,43 @@ ML_VIS.l2_short = function (root) {
         read.innerHTML = `Short 100 borrowed shares at RM50 (proceeds RM5,000, plus a RM2,500 margin deposit). At RM${price}: short profit <b>${V.rm(sp, 0)}</b>, long profit ${V.rm(lp, 0)}. ` +
             `The short's best case is <b>RM5,000</b> (price falls to 0); there is no worst case, because the price can keep rising. ` +
             `Short-account margin = (RM7,500 - cost to buy back) / cost to buy back = <b>${price ? V.pct(m, 1) : '∞'}</b>${price && m < 0.3 ? ' <span class="vis-verdict bad">below 30%: margin call</span>' : ''}.`;
+    }
+    draw();
+};
+
+ML_VIS.l2_underwrite = function (root) {
+    // TechCo sells 10 million shares; the bank pays RM9.40 each and offers them to the public at RM10.00
+    const N = 10, offer = 10, paid = 9.4;
+    let p = 10;
+    const svg = V.svg(620, 300), read = V.h('p', { class: 'vis-readout' });
+    root.append(V.h('p', { class: 'vis-note' }, 'TechCo sells 10 million new shares. The bank agrees to pay RM9.40 a share and offers them to the public at RM10.00. Drag the slider to change what the public is actually willing to pay.'),
+        V.h('div', { class: 'vis-row' }, V.slider('price the public will pay', 7, 12, 0.1, p, v => { p = v; draw(); }, v => 'RM' + v.toFixed(2))), svg, read);
+    function draw() {
+        V.clear(svg);
+        const sell = Math.min(p, offer), alone = sell * N, withUW = paid * N, bank = (sell - paid) * N;
+        const zero = 195, k = 1.55, r = V.rng(11);
+        V.rline(svg, 30, zero, 600, zero, '#94a3b8', 1.4, r);
+        const target = zero - 100 * k;
+        svg.append(V.s('line', { x1: 30, x2: 600, y1: target, y2: target, stroke: V.C.amber, 'stroke-dasharray': '6 5', 'stroke-width': 1.4 }));
+        V.text(svg, 600, target - 10, 'target RM100m', { size: 12, anchor: 'end', color: V.C.amber });
+        const bars = [
+            ['TechCo, no underwriter', 'sells the shares itself', alone, V.C.slate, V.C.slateS],
+            ['TechCo, with underwriter', 'paid by the bank', withUW, V.C.green, V.C.greenS],
+            ['Bank\'s profit or loss', 'resale price minus RM9.40', bank, bank >= 0 ? V.C.indigo : V.C.red, bank >= 0 ? V.C.indigoS : '#fee2e2'],
+        ];
+        bars.forEach(([name, sub, v, col, fill], i) => {
+            const x = 60 + i * 190, h = v * k;
+            V.rrect(svg, x, h >= 0 ? zero - h : zero, 120, Math.max(Math.abs(h), 2), col, fill, r);
+            V.text(svg, x + 60, h >= 0 ? (h > 30 ? zero - h + 20 : zero - h - 13) : zero - h + 15, (v < 0 ? '-' : '') + 'RM' + V.fmt(Math.abs(v), 1) + 'm', { size: 15, weight: 700, color: col });
+            V.text(svg, x + 60, 272, name, { size: 13, weight: 700, color: '#334155' });
+            V.text(svg, x + 60, 290, sub, { size: 12, color: '#64748b' });
+        });
+        const pr = 'RM' + p.toFixed(2);
+        let msg;
+        if (p >= offer) msg = `Demand is strong: every share sells at the RM10.00 offer price${p > offer ? ' (investors would pay ' + pr + ', so the shares are likely to rise once trading starts)' : ''}. Alone, TechCo would have raised RM100m; with the underwriter it gets RM94m and the bank keeps the <b>RM6m spread</b>. In hindsight the underwriter cost RM6m, like an insurance premium paid in a year with no accident.`;
+        else if (p >= paid) msg = `Demand is a little weak: the shares only sell at ${pr}. Alone, TechCo would raise RM${V.fmt(alone, 1)}m. With the underwriter it still gets RM94m; the bank's profit shrinks to RM${V.fmt(bank, 1)}m.`;
+        else msg = `Demand is weak: the public pays only ${pr}. Alone, TechCo would raise just RM${V.fmt(alone, 1)}m, <b>RM${V.fmt(100 - alone, 1)}m short</b> of its target. With the underwriter TechCo still gets <b>RM94m</b>, and the <b>bank loses RM${V.fmt(-bank, 1)}m</b>: that loss is the risk it was paid to carry.`;
+        read.innerHTML = msg + ' Notice the green bar never moves: <b>certainty is what underwriting sells</b>.';
     }
     draw();
 };

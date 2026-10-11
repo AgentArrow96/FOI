@@ -2452,6 +2452,30 @@
         @media (max-width: 560px) { .vis-returns { grid-template-columns: auto repeat(5, minmax(44px, 1fr)); font-size: 12px; } .vis-num { width: 100%; } }
         .pdf-figure img { max-width: 760px; margin: 0 auto; border: 1px solid #f1f5f9; }
 
+        /* Video Library */
+        .video-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 440px), 1fr)); gap: 18px; }
+        .video-card { background: #fff; border: 1px solid #e2e8f0; border-top: 4px solid var(--accent); border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; }
+        .video-frame { position: relative; aspect-ratio: 16 / 9; background: #0f172a; }
+        .video-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+        .video-meta { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+        .video-tag { color: var(--accent); font-size: 11px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+        .video-meta h3 { margin: 0; color: #0f172a; font-size: 16px; line-height: 1.35; }
+        .video-meta p { margin: 0; color: #64748b; font-size: 12.5px; }
+        .video-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: auto; padding-top: 8px; }
+        .video-link { color: #4f46e5; font-size: 12.5px; font-weight: 700; text-decoration: none; }
+        .video-link:hover { text-decoration: underline; }
+        @media print { .video-frame { display: none; } }
+        .why-card p + p { margin-top: 8px; }
+        /* IPO intro: the five hard questions */
+        .hard-qs { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; margin: 16px 0 14px; }
+        .hard-q { background: #fff; border: 1px solid #e2e8f0; border-left: 4px solid var(--accent); border-radius: 12px; padding: 12px 13px; display: flex; flex-direction: column; gap: 6px; box-shadow: 0 1px 2px rgba(15, 23, 42, .04); }
+        .hard-q .num { width: 24px; height: 24px; display: grid; place-items: center; border-radius: 8px; background: var(--accent); color: #fff; font-size: 11px; font-weight: 900; }
+        .hard-q strong { color: #0f172a; font-size: 14px; line-height: 1.35; }
+        .hard-q .by { color: #64748b; font-size: 12px; line-height: 1.45; margin-top: auto; padding-top: 6px; border-top: 1px dashed #e2e8f0; }
+        .lesson-intro p.hard-qs-close { color: #0f172a; }
+        @media (max-width: 1100px) { .hard-qs { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+        @media (max-width: 640px) { .hard-qs { grid-template-columns: 1fr; } }
+
         /* Helper classes (generated from former inline styles) */
         .ta-r { text-align: right; }
         .ta-c { text-align: center; }
