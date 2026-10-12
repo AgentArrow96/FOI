@@ -442,6 +442,107 @@ ML_VIS.l3_index = function (root) {
     }
     draw();
 };
+
+// Stop-loss and stop-limit orders, shown on a simplified price board
+function stopBoard(root, limitMode) {
+    const N = 100, bought = 20, stop = 17, lim = 16.5, p0 = 18.5;
+    let price = 15, jump = true;
+    const svg = V.svg(700, 540), read = V.h('div', { class: 'vis-readout' });
+    root.append(
+        V.h('p', { class: 'vis-note', html: `You own $100$ shares bought at $\\text{RM}20.00$ and set a ${limitMode ? 'stop-limit order: stop price $\\text{RM}17.00$, limit price $\\text{RM}16.50$' : 'stop-loss order at $\\text{RM}17.00$'}. Drag the slider to make the price fall, and choose how it gets there.` }),
+        V.h('div', { class: 'vis-row' }, V.slider('price falls to', 12, 20, 0.1, price, v => { price = Math.round(v * 10) / 10; draw(); }, v => 'RM' + v.toFixed(2))),
+        V.seg([[true, 'in one jump (a gap)'], [false, 'step by step']], jump, v => { jump = v; draw(); }), svg, read);
+    function draw() {
+        V.clear(svg);
+        const r = V.rng(21), C = V.C, f2 = x => x.toFixed(2), m = x => `$\\text{RM}${f2(x)}$`;
+        const trig = price <= stop + 1e-9;
+        const T = trig ? (jump ? price : stop) : price;                     // price of the first trade at or below the stop
+        const filled = trig && (!limitMode || T >= lim - 1e-9);
+        const waiting = limitMode && trig && !filled;
+        const X = p => 60 + (20 - p) / 8 * 580;
+        // ---- price strip
+        V.text(svg, 60, 20, 'you bought at RM20', { size: 13, anchor: 'start', color: '#64748b' });
+        V.rline(svg, 60, 60, 640, 60, '#94a3b8', 2, r);
+        [20, 18, 16, 14, 12].forEach(p => { V.rline(svg, X(p), 55, X(p), 65, '#94a3b8', 1.4, r); V.text(svg, X(p), 82, 'RM' + p, { size: 12, color: '#64748b' }); });
+        V.rline(svg, X(stop), 44, X(stop), 72, C.rose, 2.4, r, { 'stroke-dasharray': '5 4' });
+        V.text(svg, X(stop), 102, 'stop RM17', { size: 13, weight: 700, color: C.rose });
+        if (limitMode) {
+            V.rline(svg, X(lim), 50, X(lim), 70, C.amber, 2.4, r, { 'stroke-dasharray': '2 4' });
+            V.text(svg, X(lim), 120, 'limit RM16.50', { size: 13, weight: 700, color: C.amber });
+        }
+        if (price < p0) {
+            if (jump) {
+                V.rline(svg, X(p0), 60, X(price), 60, C.red, 3.2, r, { 'stroke-dasharray': '7 6' });
+                V.text(svg, (X(p0) + X(price)) / 2, 24, 'GAP: no trades in between', { size: 13, weight: 700, color: C.red });
+            } else {
+                for (let p = p0; p >= price - 1e-9; p -= 0.25) V.dot(svg, X(p), 60, '#334155', 2.5, '#334155');
+                V.text(svg, (X(p0) + X(price)) / 2, 24, 'trades at every price on the way down', { size: 13, weight: 700, color: '#334155' });
+            }
+        }
+        V.dot(svg, X(price), 60, trig ? C.rose : C.green, 8, trig ? C.roseS : C.greenS);
+        V.text(svg, Math.min(Math.max(X(price), 70), 630), 42, 'price now RM' + f2(price), { size: 14, weight: 700, color: trig ? C.rose : C.green });
+        // ---- price board
+        const lx = 300, lw = 240, rowH = 26, step = 30;
+        const asks = [[T + 0.08, 300], [T + 0.06, 500], [T + 0.04, 200], [T + 0.02, 400]];
+        const bids = [[T, 300], [T - 0.02, 600], [T - 0.04, 250], [T - 0.06, 400]];
+        V.text(svg, lx + lw / 2, 160, 'ABC Bhd price board (simplified)', { size: 15, weight: 700, color: '#334155' });
+        V.text(svg, lx + lw / 2, 182, 'SELLERS waiting ("ask" side)', { size: 13, weight: 700, color: C.rose });
+        const drawRow = (y, px, q, col, fill, hit, label) => {
+            V.rrect(svg, lx, y, lw, rowH, col, fill, r, hit ? 3 : 1.6);
+            V.text(svg, lx + 14, y + rowH / 2, 'RM' + f2(px), { size: 15, weight: 700, anchor: 'start' });
+            V.text(svg, lx + lw - 12, y + rowH / 2, label || q + ' shares', { size: 13, anchor: 'end', color: label ? col : '#475569', weight: label ? 700 : 400 });
+        };
+        const y0 = 194;
+        let yourY = null, hitY = null;
+        if (waiting) { yourY = y0; drawRow(y0, lim, 0, C.indigo, C.indigoS, true, 'YOU, waiting'); }
+        asks.forEach(([px, q], i) => drawRow(y0 + (i + 1) * step, px, q, C.rose, C.roseS, false));
+        V.text(svg, lx + lw / 2, y0 + 5 * step + 8, 'gap between the cheapest seller and the highest buyer', { size: 12, color: '#64748b' });
+        V.text(svg, lx + lw / 2, y0 + 5 * step + 40, 'BUYERS waiting ("bid" side)', { size: 13, weight: 700, color: C.green });
+        const by = y0 + 5 * step + 52;
+        bids.forEach(([px, q], i) => { const hit = filled && i === 0; if (hit) hitY = by; drawRow(by + i * step, px, q, C.green, C.greenS, hit); });
+        // ---- your order card
+        const cy = 330, col = !trig ? '#64748b' : filled ? C.green : C.indigo;
+        V.rrect(svg, 10, cy, 250, 120, col, !trig ? '#f1f5f9' : filled ? C.greenS : C.indigoS, r, 2.2);
+        const lines = ['YOU own 100 shares', limitMode ? 'STOP RM17 then LIMIT RM16.50' : 'SELL STOP at RM17', !trig ? 'asleep: not on the board' : filled ? 'SOLD at RM' + f2(T) : 'NOT SOLD: still waiting'];
+        lines.forEach((t, i) => V.text(svg, 135, cy + 26 + i * 30, t, { size: i === 2 ? 16 : 15, weight: i === 2 ? 700 : 400, color: i === 2 ? col : '#1e293b' }));
+        if (hitY !== null) V.arrow(svg, 264, cy + 60, lx - 6, hitY + rowH / 2, C.green, 2.8, r);
+        if (yourY !== null) V.arrow(svg, 264, cy + 40, lx - 6, yourY + rowH / 2, C.indigo, 2.8, r);
+        // ---- short notes beside the board
+        const nx = 556;
+        if (!trig) ['Your stop is only an alarm.', 'It is not on the board,', 'so nobody can see it.'].forEach((t, i) => V.text(svg, nx, 300 + i * 18, t, { size: 13, anchor: 'start', color: '#475569' }));
+        if (filled) V.text(svg, nx, hitY + rowH / 2, '<- matched: sold here', { size: 14, weight: 700, anchor: 'start', color: C.green });
+        if (waiting) {
+            V.text(svg, nx, yourY + rowH / 2, '<- your limit order waits', { size: 14, weight: 700, anchor: 'start', color: C.indigo });
+            ['Best buyer only pays', 'RM' + f2(T) + ': below your limit,', 'so nothing sells.'].forEach((t, i) => V.text(svg, nx, by + 6 + i * 18, t, { size: 13, anchor: 'start', color: C.red }));
+        }
+        // ---- readout
+        const planned = (bought - stop) * N, loss = (bought - T) * N;
+        let h;
+        if (!trig) {
+            h = `The price is ${m(price)}, still above the stop price $\\text{RM}17.00$, so nothing has happened. Your stop is a "suspended" order: only your broker knows it exists.`;
+        } else {
+            h = jump ? `The price jumped straight past $\\text{RM}17.00$ with no trades in between. The first trade at or below the stop price was at ${m(T)}, and that set the alarm off.`
+                : `The price fell step by step, so there were trades at every price on the way down. The first trade at or below the stop price was at $\\text{RM}17.00$, and that set the alarm off.`;
+            if (!limitMode) {
+                h += ` The stop fires and becomes a <b>market order</b> to sell, which takes the best buyer waiting, at ${m(T)}.` +
+                    `$$\\text{Loss} = (P_{\\text{bought}} - P_{\\text{sold}}) \\times N = (20.00 - ${f2(T)}) \\times 100 = \\boxed{\\text{RM}${V.tn(loss, 0)}}$$` +
+                    (loss > planned + 0.5 ? `You planned to lose $\\text{RM}${V.tn(planned, 0)}$ and lost $\\text{RM}${V.tn(loss, 0)}$: a stop price is a trigger, not a guaranteed price.` : `This matches the $\\text{RM}${V.tn(planned, 0)}$ loss you planned, because trading was continuous. A gap would have cost more: try the "in one jump" button.`);
+            } else if (filled) {
+                h += ` The stop fires and becomes a <b>limit order</b> to sell at $\\text{RM}16.50$ or better. The best buyer waiting pays ${m(T)}, which is at least your limit, so it fills.` +
+                    `$$\\text{Loss} = (20.00 - ${f2(T)}) \\times 100 = \\boxed{\\text{RM}${V.tn(loss, 0)}}$$` +
+                    `The limit price was not a problem here. Move the slider lower, with the jump option on, to see when it becomes one.`;
+            } else {
+                h += ` The stop fires and becomes a <b>limit order</b> to sell at $\\text{RM}16.50$ or better. The best buyer waiting only offers ${m(T)}, below your limit, so the order joins the queue of sellers and <b>waits</b>. You still own the $100$ shares.` +
+                    `$$\\text{Loss so far (on paper)} = (20.00 - ${f2(T)}) \\times 100 = \\boxed{\\text{RM}${V.tn(loss, 0)}}$$` +
+                    `It keeps growing if the price keeps falling. The limit protected your selling price, but not your shares: price control cost you execution certainty.`;
+            }
+        }
+        V.math(read, h);
+    }
+    draw();
+}
+ML_VIS.l3_stop_board = root => stopBoard(root, false);
+ML_VIS.l3_stoplimit_board = root => stopBoard(root, true);
 // Chapter 4 and Appendix 4A visuals
 ML_VIS.l4_compound = function (root) {
     let pv = 1000, rate = 0.08, years = 10, m = 1;
