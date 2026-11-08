@@ -2515,9 +2515,12 @@
         .ff-tags .ff-tag.ff-implicit { margin-left: 0; }
         .ff-base { position: relative; background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; padding: 6px 12px; margin: 8px 0 10px; overflow-x: auto; }
         .ff-base .katex-display { margin: .5em 0; font-size: 1.15em; }
-        .ff-list.recall .ff-base:not(.shown) { cursor: pointer; }
-        .ff-list.recall .ff-base:not(.shown) > * { visibility: hidden; }
-        .ff-list.recall .ff-base:not(.shown)::after { content: 'Tap to reveal the base formula'; position: absolute; inset: 0; display: grid; place-items: center; color: #92400e; font-weight: 800; }
+        .ff-recall-on .ff-base:not(.shown), .ff-recall-on .ff-tbase:not(.shown) { cursor: pointer; }
+        .ff-recall-on .ff-base:not(.shown) > *, .ff-recall-on .ff-tbase:not(.shown) > * { visibility: hidden; }
+        .ff-recall-on .ff-base:not(.shown)::after { content: 'Tap to reveal the base formula'; position: absolute; inset: 0; display: grid; place-items: center; color: #92400e; font-weight: 800; }
+        .ff-tbase { position: relative; min-height: 34px; }
+        .ff-recall-on .ff-tbase:not(.shown) { background: #fffbeb; border: 1px dashed #fcd34d; border-radius: 10px; }
+        .ff-recall-on .ff-tbase:not(.shown)::after { content: 'Tap to reveal'; position: absolute; inset: 0; display: grid; place-items: center; color: #92400e; font-weight: 800; font-size: 13px; }
         .ff-legend, .ff-when { margin: 4px 0; color: #475569; font-size: 14px; }
         .ff-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 12px 0; }
         .ff-example, .ff-trap { border-radius: 12px; padding: 10px 14px; font-size: 14px; }
@@ -2539,6 +2542,13 @@
         .ff-grid > *, .ff-card { min-width: 0; }
         .ff-example { overflow-x: auto; }
         @media (max-width: 760px) { .ff-grid { grid-template-columns: minmax(0, 1fr); } .ff-vname { display: inline; } }
+        /* number inputs in widgets: no spinner arrows, so narrow inputs show every digit on phones */
+        .vis-root input[type=number]::-webkit-inner-spin-button, .vis-root input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        .vis-root input[type=number] { -moz-appearance: textfield; appearance: textfield; }
+        /* formula boxes outside an analogy box (teach panels, cards, lesson bodies) */
+        .lesson-body .formula:not(.analogy-box .formula) { display: block; background: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid var(--accent, #64748b); border-radius: 12px; padding: 10px 14px; margin: 12px 0; color: #0f172a; overflow-x: auto; }
+        .vis-slider input:disabled { opacity: .45; cursor: not-allowed; }
+        .vis-slider:has(input:disabled) { opacity: .6; }
 
         /* Helper classes (generated from former inline styles) */
         .ta-r { text-align: right; }
@@ -2566,24 +2576,64 @@
         .accent-l1 { --accent: #0284c7; }
         .bg-l1 { background: #0284c7; }
         .fg-l1 { color: #0284c7; }
+        .nav-l1.active { background: #0284c7; }
         .theme-l2 { --accent: #65a30d; --soft: #f7fee7; }
         .accent-l2 { --accent: #65a30d; }
         .bg-l2 { background: #65a30d; }
         .fg-l2 { color: #65a30d; }
+        .nav-l2.active { background: #65a30d; }
         .theme-l3 { --accent: #4f46e5; --soft: #eef2ff; }
         .accent-l3 { --accent: #4f46e5; }
         .bg-l3 { background: #4f46e5; }
         .fg-l3 { color: #4f46e5; }
+        .nav-l3.active { background: #4f46e5; }
         .theme-l4 { --accent: #e11d48; --soft: #fff1f2; }
         .accent-l4 { --accent: #e11d48; }
         .bg-l4 { background: #e11d48; }
         .fg-l4 { color: #e11d48; }
+        .nav-l4.active { background: #e11d48; }
         .theme-l5 { --accent: #0d9488; --soft: #f0fdfa; }
         .accent-l5 { --accent: #0d9488; }
         .bg-l5 { background: #0d9488; }
         .fg-l5 { color: #0d9488; }
+        .nav-l5.active { background: #0d9488; }
         .theme-exam { --accent: #d97706; --soft: #fffbeb; }
         .accent-exam { --accent: #d97706; }
         .bg-exam { background: #d97706; }
         .fg-exam { color: #d97706; }
+        .theme-l6 { --accent: #ea580c; --soft: #fff7ed; }
+        .accent-l6 { --accent: #ea580c; }
+        .bg-l6 { background: #ea580c; }
+        .fg-l6 { color: #ea580c; }
+        .nav-l6.active { background: #ea580c; }
+        .theme-l7 { --accent: #7c3aed; --soft: #f5f3ff; }
+        .accent-l7 { --accent: #7c3aed; }
+        .bg-l7 { background: #7c3aed; }
+        .fg-l7 { color: #7c3aed; }
+        .nav-l7.active { background: #7c3aed; }
+        .theme-l8 { --accent: #2563eb; --soft: #eff6ff; }
+        .accent-l8 { --accent: #2563eb; }
+        .bg-l8 { background: #2563eb; }
+        .fg-l8 { color: #2563eb; }
+        .nav-l8.active { background: #2563eb; }
+        .theme-l9 { --accent: #c026d3; --soft: #fdf4ff; }
+        .accent-l9 { --accent: #c026d3; }
+        .bg-l9 { background: #c026d3; }
+        .fg-l9 { color: #c026d3; }
+        .nav-l9.active { background: #c026d3; }
+        .theme-l10 { --accent: #059669; --soft: #ecfdf5; }
+        .accent-l10 { --accent: #059669; }
+        .bg-l10 { background: #059669; }
+        .fg-l10 { color: #059669; }
+        .nav-l10.active { background: #059669; }
+        .theme-l11 { --accent: #0891b2; --soft: #ecfeff; }
+        .accent-l11 { --accent: #0891b2; }
+        .bg-l11 { background: #0891b2; }
+        .fg-l11 { color: #0891b2; }
+        .nav-l11.active { background: #0891b2; }
+        .theme-l12 { --accent: #db2777; --soft: #fdf2f8; }
+        .accent-l12 { --accent: #db2777; }
+        .bg-l12 { background: #db2777; }
+        .fg-l12 { color: #db2777; }
+        .nav-l12.active { background: #db2777; }
         .fg-gold { color: #fbbf24; }

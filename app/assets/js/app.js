@@ -1,3 +1,4 @@
+window.CHAPTER_COUNT = 12;
 
         function switchConcept(group, panel, button) {
             document.querySelectorAll('[id^="' + group + '-"]').forEach(x => x.classList.remove('active'));
@@ -95,13 +96,13 @@
             if (chip) { chip.parentElement.querySelectorAll('.ff-chip').forEach(b => b.classList.toggle('on', b === chip)); ffApply(); return; }
             const rec = e.target.closest('[data-ff-recall]');
             if (rec) {
-                const list = document.querySelector('#sec-formulas .ff-list'), on = list.classList.toggle('recall');
+                const sec = document.getElementById('sec-formulas'), on = sec.classList.toggle('ff-recall-on');
                 rec.setAttribute('aria-pressed', String(on)); rec.textContent = on ? 'Recall mode: on' : 'Recall mode';
-                list.querySelectorAll('.ff-base.shown').forEach(b => b.classList.remove('shown'));
+                sec.querySelectorAll('.ff-base.shown, .ff-tbase.shown').forEach(b => b.classList.remove('shown'));
                 return;
             }
-            const base = e.target.closest('.ff-base');
-            if (base && base.closest('.ff-list.recall')) base.classList.toggle('shown');
+            const base = e.target.closest('.ff-base, .ff-tbase');
+            if (base && base.closest('.ff-recall-on')) base.classList.toggle('shown');
         });
         document.addEventListener('input', e => { if (e.target.id === 'ff-search') ffApply(); });
         document.addEventListener('change', e => { if (e.target.id === 'quiz-mode') updateModeNote(); });
@@ -210,7 +211,7 @@
         function resetProgress() { if (!confirm('Reset learned status and best quiz scores?')) return; try { localStorage.removeItem('foiStudyProgress'); } catch (e) { } updateProgressDashboard(); }
         function updateProgressDashboard() {
             const p = getProgress();
-            for (let n = 1; n <= 5; n++) {
+            for (let n = 1; n <= (window.CHAPTER_COUNT || 5); n++) {
                 const x = p[n] || { learned: false, best: 0 }; const pct = Math.round(((x.learned ? 1 : 0) + (x.best >= 80 ? 1 : 0)) / 2 * 100);
                 const status = document.getElementById('status-m' + n), best = document.getElementById('best-m' + n), fill = document.getElementById('progress-m' + n);
                 if (status) status.textContent = x.learned ? 'Learned' : 'Not learned'; if (best) best.textContent = 'Best: ' + (x.best || 0) + '%'; if (fill) fill.style.width = pct + '%';
