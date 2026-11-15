@@ -53,9 +53,27 @@ const V = {
         V.rline(g, x, y, x + w, y, color, width, r); V.rline(g, x + w, y, x + w, y + h, color, width, r);
         V.rline(g, x + w, y + h, x, y + h, color, width, r); V.rline(g, x, y + h, x, y, color, width, r);
     },
+    // Splits a label into [text, isSubscript] pieces: sigma_p, R_{AB} and Unicode subscript digits become subscripts
+    subSegs(str) {
+        const out = [], re = /_\{([^{}]+)\}|_([A-Za-z0-9])|([\u2080-\u2089]+)/g;
+        const dig = s => s.replace(/[\u2080-\u2089]/g, c => String(c.charCodeAt(0) - 0x2080));
+        let last = 0, m;
+        str = String(str);
+        while ((m = re.exec(str))) {
+            if (m.index > last) out.push([str.slice(last, m.index), false]);
+            out.push([m[1] || m[2] || dig(m[3]), true]);
+            last = re.lastIndex;
+        }
+        if (last < str.length) out.push([str.slice(last), false]);
+        return out;
+    },
     text(g, x, y, str, o = {}) {
         const t = V.s('text', { x, y, 'font-family': V.FONT, 'font-size': o.size || 15, fill: o.color || V.C.ink, 'text-anchor': o.anchor || 'middle', 'dominant-baseline': 'middle', 'font-weight': o.weight || 400 });
-        t.textContent = str; g.append(t); return t;
+        V.subSegs(str).forEach(([s, sub]) => {
+            if (!sub) t.append(document.createTextNode(s));
+            else { const k = V.s('tspan', { 'baseline-shift': 'sub', 'font-size': '72%' }); k.textContent = s; t.append(k); }
+        });
+        g.append(t); return t;
     },
     arrow(g, x1, y1, x2, y2, color, width = 1.8, r) {
         V.rline(g, x1, y1, x2, y2, color, width, r);
@@ -167,10 +185,13 @@ const V = {
         return { THREE, scene, camera, renderer, dirty: () => { needs = true; }, onFrame: f => frameFns.push(f) };
     },
     label3d(THREE, text, color = '#1e293b', size = 0.35) {
-        const c = document.createElement('canvas'), ctx = c.getContext('2d'), fs = 64;
-        ctx.font = `700 ${fs}px Kalam, 'Segoe Print', cursive`;
-        const w = Math.ceil(ctx.measureText(text).width) + 24; c.width = w; c.height = fs + 24;
-        ctx.font = `700 ${fs}px Kalam, 'Segoe Print', cursive`; ctx.fillStyle = color; ctx.textBaseline = 'middle'; ctx.fillText(text, 12, c.height / 2 + 4);
+        const c = document.createElement('canvas'), ctx = c.getContext('2d'), fs = 64, subFs = Math.round(fs * 0.72);
+        const segs = V.subSegs(text), font = f => `700 ${f}px Kalam, 'Segoe Print', cursive`;
+        const width = () => segs.reduce((a, [s, sub]) => { ctx.font = font(sub ? subFs : fs); return a + ctx.measureText(s).width; }, 0);
+        const w = Math.ceil(width()) + 24; c.width = w; c.height = fs + 24;
+        ctx.fillStyle = color; ctx.textBaseline = 'middle';
+        let px = 12;
+        segs.forEach(([s, sub]) => { ctx.font = font(sub ? subFs : fs); ctx.fillText(s, px, c.height / 2 + (sub ? 16 : 4)); px += ctx.measureText(s).width; });
         const tex = new THREE.CanvasTexture(c); tex.anisotropy = 4;
         const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false }));
         sp.scale.set(size * w / c.height, size, 1); sp.renderOrder = 10; return sp;
@@ -642,7 +663,7 @@ ML_VIS.l5_correlation = function (root) {
         V.slider('correlation ρ', -1, 1, 0.05, rho, v => { rho = v; draw(); }, v => (v > 0 ? '+' : '') + v.toFixed(2))), svg, read);
     function draw() {
         V.clear(svg);
-        const c = V.chart(svg, { x0: 70, x1: 520, y0: 260, y1: 30, X: [0, 0.22], Y: [0.05, 0.13], xticks: [0, 0.05, 0.1, 0.15, 0.2], yticks: [0.06, 0.08, 0.1, 0.12], fx: t => V.pct(t, 0), fy: t => V.pct(t, 0), xlabel: 'portfolio risk σp', ylabel: 'expected return' });
+        const c = V.chart(svg, { x0: 70, x1: 520, y0: 260, y1: 30, X: [0, 0.22], Y: [0.05, 0.13], xticks: [0, 0.05, 0.1, 0.15, 0.2], yticks: [0.06, 0.08, 0.1, 0.12], fx: t => V.pct(t, 0), fy: t => V.pct(t, 0), xlabel: 'portfolio risk σ_p', ylabel: 'expected return' });
         const curveFor = r => { const p = []; for (let i = 0; i <= 50; i++) { const ww = i / 50; p.push([c.X(sigmaP(ww, r)), c.Y(ww * PORT.eA + (1 - ww) * PORT.eB)]); } return p; };
         V.path(svg, curveFor(1), '#94a3b8', 1.6, { 'stroke-dasharray': '6 5' });
         V.path(svg, curveFor(-1), '#94a3b8', 1.6, { 'stroke-dasharray': '6 5' });
@@ -678,7 +699,7 @@ ML_VIS.l5_sml = function (root) {
         svg.append(V.s('line', { x1: c.X(0), x2: c.X(0), y1: c.Y(-0.05), y2: c.Y(0.25), stroke: '#e2e8f0' }));
         V.path(svg, [[c.X(-1), c.Y(req(-1))], [c.X(2.5), c.Y(req(2.5))]], V.C.green, 2.8);
         V.text(svg, c.X(2.45), c.Y(req(2.5)) - 14, 'SML', { size: 14, weight: 700, color: V.C.green, anchor: 'end' });
-        V.dot(svg, c.X(0), c.Y(rf), V.C.slate, 5); V.text(svg, c.X(0) + 8, c.Y(rf) + 16, 'Rf', { size: 13, anchor: 'start', color: '#475569' });
+        V.dot(svg, c.X(0), c.Y(rf), V.C.slate, 5); V.text(svg, c.X(0) + 8, c.Y(rf) + 16, 'R_f', { size: 13, anchor: 'start', color: '#475569' });
         V.dot(svg, c.X(1), c.Y(rm), V.C.indigo, 5); V.text(svg, c.X(1) + 8, c.Y(rm) + 16, 'market', { size: 13, anchor: 'start', color: V.C.indigo });
         const R = req(beta), alpha = er - R;
         svg.append(V.s('line', { x1: c.X(beta), x2: c.X(beta), y1: c.Y(R), y2: c.Y(er), stroke: alpha >= 0 ? V.C.green : V.C.red, 'stroke-width': 2, 'stroke-dasharray': '4 3' }));
@@ -711,10 +732,10 @@ ML_VIS.l5_sigma3d = async function (root) {
     scene.add(new THREE.LineSegments(new THREE.WireframeGeometry(g), new THREE.LineBasicMaterial({ color: 0x334155, transparent: true, opacity: 0.12 })));
     const o = -sz / 2;
     scene.add(V.line3d(THREE, [[o, 0, o], [-o, 0, o]], 0x64748b), V.line3d(THREE, [[o, 0, o], [o, 0, -o]], 0x64748b), V.line3d(THREE, [[o, 0, o], [o, 2.6, o]], 0x64748b));
-    [['weight in A →', [0.3, 0, o - 0.4]], ['ρ = -1', [o - 0.45, 0, o]], ['ρ = +1', [o - 0.45, 0, -o]], ['σp', [o, 2.85, o]]].forEach(([t, pos]) => { const s = V.label3d(THREE, t, '#475569', 0.26); s.position.set(...pos); scene.add(s); });
+    [['weight in A →', [0.3, 0, o - 0.4]], ['ρ = -1', [o - 0.45, 0, o]], ['ρ = +1', [o - 0.45, 0, -o]], ['σ_p', [o, 2.85, o]]].forEach(([t, pos]) => { const s = V.label3d(THREE, t, '#475569', 0.26); s.position.set(...pos); scene.add(s); });
     const zeroPt = new THREE.Mesh(new THREE.SphereGeometry(0.08, 16, 12), new THREE.MeshLambertMaterial({ color: 0xd97706 }));
     zeroPt.position.set((1 / 3 - 0.5) * sz, 0, o); scene.add(zeroPt);
-    const zl = V.label3d(THREE, 'σp = 0 at w = 1/3, ρ = -1', '#b45309', 0.24); zl.position.set((1 / 3 - 0.5) * sz + 0.9, 0.7, o + 0.5); scene.add(zl);
+    const zl = V.label3d(THREE, 'σ_p = 0 at w = 1/3, ρ = -1', '#b45309', 0.24); zl.position.set((1 / 3 - 0.5) * sz + 0.9, 0.7, o + 0.5); scene.add(zl);
     function slice() {
         if (!ready) return;
         if (line) scene.remove(line);
@@ -2485,6 +2506,409 @@ ML_VIS.l12_etf_vs_mf = function (root) {
             `The ETF made $${buys}$ purchases and paid $${V.trm(trade, 0)}$ in commissions and spreads; ` + (Math.abs(ea - eb) < 1e-9 ? 'the two expense ratios are the same. ' : `its expense ratio is $${V.tp(Math.abs(ea - eb))}$ ${ea > eb ? 'lower' : 'higher'} each year. `) +
             `Net result: <b>${d >= 0 ? 'the ETF ends ahead by' : 'the mutual fund ends ahead by'} $${V.trm(Math.abs(d), 0)}$</b>. ` +
             'Small, frequent purchases make per-trade costs bite; large balances held for long periods make the expense ratio matter more. The expense ratio alone never settles it.');
+    }
+    draw();
+};
+// Chapter 14 visuals: options (puts and calls)
+
+const L14 = {
+    // decimals: none for whole numbers, two otherwise
+    dec: v => (Math.abs(v - Math.round(v)) < 0.005 ? 0 : 2),
+    num(a, d) { return Math.abs(a).toFixed(d).replace(/\B(?=(\d{3})+(?!\d))/g, ','); },
+    z: n => (Math.abs(n) < 0.005 ? 0 : n),
+    rm(n, d) { n = L14.z(n); d = d === undefined ? L14.dec(n) : d; return (n < 0 ? '-RM' : 'RM') + L14.num(n, d); },
+    tn(n, d) { n = L14.z(n); d = d === undefined ? L14.dec(n) : d; return (n < 0 ? '-' : '') + L14.num(n, d).replace(/,/g, '{,}'); },
+    trm(n, d) { n = L14.z(n); d = d === undefined ? L14.dec(n) : d; return (n < 0 ? '-' : '') + '\\text{RM}' + L14.num(n, d).replace(/,/g, '{,}'); },
+    pc(n, d = 0) { n = L14.z(n); return (n < 0 ? '-' : '') + L14.num(n, d) + '%'; },
+    tpc(n, d = 0) { n = L14.z(n); return (n < 0 ? '-' : '') + L14.num(n, d).replace(/,/g, '{,}') + '\\%'; },
+    nice(span, n) {
+        const raw = span / n, mag = Math.pow(10, Math.floor(Math.log10(raw)));
+        return [1, 2, 2.5, 5, 10].map(k => k * mag).find(s => s >= raw);
+    },
+    setSlider(w, v) { w.input.value = v; w.input.dispatchEvent(new Event('input')); },
+    // A profit-and-loss chart. o: xr [lo, hi], series [{f, color, width, dash, label}], kinks [x...], dot {x, f, color, label},
+    // vlines [{x, label, color}], marks [{x, y, label, color, dx, dy, anchor}], xfmt, yfmt, xlabel, ylabel
+    plot(svg, o) {
+        const [lo, hi] = o.xr, x0 = 74, x1 = 536, y0 = 268;
+        // header: the y-axis description on the first row, then the legend entries flowing along following rows
+        const leg = o.legend || [], rows = [[]];
+        let cx = x0;
+        leg.forEach(l => {
+            const w = 36 + l.label.length * 6.4 + 18;
+            if (cx + w > x1 + 20 && rows[rows.length - 1].length) { rows.push([]); cx = x0; }
+            rows[rows.length - 1].push([l, cx]); cx += w;
+        });
+        const y1 = leg.length ? 30 + 18 * (rows.length - 1) + 28 : 40;
+        const xs = [];
+        for (let k = 0; k <= 240; k++) xs.push(lo + (hi - lo) * k / 240);
+        (o.kinks || []).forEach(k => { if (k > lo && k < hi) xs.push(k); });
+        xs.sort((a, b) => a - b);
+        let mn = 0, mx = 0;
+        o.series.forEach(s => xs.forEach(x => { const v = s.f(x); mn = Math.min(mn, v); mx = Math.max(mx, v); }));
+        (o.marks || []).forEach(m => { mn = Math.min(mn, m.y); mx = Math.max(mx, m.y); });
+        const span = Math.max(mx - mn, 1), pad = span * 0.14;
+        const ya = mn < 0 ? mn - pad : 0, yb = mx > 0 ? mx + pad : pad;
+        const step = L14.nice(yb - ya, 5), yt = [];
+        for (let v = Math.ceil(ya / step) * step; v <= yb + 1e-9; v += step) yt.push(L14.z(Math.round(v / step) * step));
+        const xstep = L14.nice(hi - lo, 6), xt = [];
+        for (let v = Math.ceil(lo / xstep) * xstep; v <= hi + 1e-9; v += xstep) xt.push(v);
+        const c = V.chart(svg, { x0, x1, y0, y1, X: [lo, hi], Y: [ya, yb], xticks: xt, yticks: yt, fx: o.xfmt || (t => t), fy: o.yfmt || (t => L14.rm(t, 0)), xlabel: o.xlabel, seed: 14 });
+        if (o.ylabel) V.text(svg, 8, 12, o.ylabel, { size: 13, anchor: 'start', color: '#475569' });
+        svg.append(V.s('line', { x1: x0, x2: x1, y1: c.Y(0), y2: c.Y(0), stroke: '#64748b', 'stroke-width': 1.6 }));
+        (o.vlines || []).forEach(v => {
+            if (v.x < lo || v.x > hi) return;
+            svg.append(V.s('line', { x1: c.X(v.x), x2: c.X(v.x), y1: y0, y2: y1, stroke: v.color || '#94a3b8', 'stroke-width': 1.3, 'stroke-dasharray': '5 5' }));
+            if (v.label) V.text(svg, c.X(v.x) + (v.dx || 0), y1 - 8, v.label, { size: 12, weight: 700, color: v.color || '#64748b', anchor: v.anchor || 'middle' });
+        });
+        o.series.forEach(s => V.path(svg, xs.map(x => [c.X(x), c.Y(s.f(x))]), s.color, s.width || 3, s.dash ? { 'stroke-dasharray': s.dash } : {}));
+        (o.marks || []).forEach(m => {
+            V.dot(svg, c.X(m.x), c.Y(m.y), m.color || V.C.ink, 5, '#fff');
+            if (m.label) V.text(svg, c.X(m.x) + (m.dx || 0), c.Y(m.y) + (m.dy || -16), m.label, { size: 12, weight: 700, color: m.color || V.C.ink, anchor: m.anchor || 'middle' });
+        });
+        if (o.dot && o.dot.x >= lo && o.dot.x <= hi) {
+            const d = o.dot, v = d.f(d.x);
+            svg.append(V.s('line', { x1: c.X(d.x), x2: c.X(d.x), y1: c.Y(0), y2: c.Y(v), stroke: d.color || V.C.amber, 'stroke-width': 1.6, 'stroke-dasharray': '3 4' }));
+            V.dot(svg, c.X(d.x), c.Y(v), d.color || V.C.amber, 7, '#fff');
+            if (d.label) V.text(svg, c.X(d.x), c.Y(v) + (v >= 0 ? -18 : 20), d.label, { size: 13, weight: 700, color: d.color || V.C.amber });
+        }
+        rows.forEach((row, k) => row.forEach(([l, lx]) => {
+            const ly = 30 + k * 18;
+            svg.append(V.s('line', Object.assign({ x1: lx, x2: lx + 28, y1: ly, y2: ly, stroke: l.color, 'stroke-width': l.width || 3 }, l.dash ? { 'stroke-dasharray': l.dash } : {})));
+            V.text(svg, lx + 36, ly, l.label, { size: 12, anchor: 'start', color: l.color });
+        }));
+        return c;
+    }
+};
+
+// ---------------------------------------------------------------- payoff and profit at expiry
+ML_VIS.l14_payoff = function (root) {
+    let kind = 'lc', K = 50, P = 5, S = 53;
+    const M = 100, svg = V.svg(560, 310), read = V.h('p', { class: 'vis-readout' }), sl = {};
+    const defs = {
+        lc: { name: 'long call', type: 'call', side: 1, col: V.C.green },
+        lp: { name: 'long put', type: 'put', side: 1, col: V.C.sky },
+        sc: { name: 'short call', type: 'call', side: -1, col: V.C.rose },
+        sp: { name: 'short put', type: 'put', side: -1, col: V.C.amber }
+    };
+    const seg = V.seg([['lc', 'long call'], ['lp', 'long put'], ['sc', 'short call (writer)'], ['sp', 'short put (writer)']], kind, v => { kind = v; draw(); });
+    const mk = (k, label, min, max, step, val, fmt, set) => (sl[k] = V.slider(label, min, max, step, val, v => { set(v); draw(); }, fmt));
+    root.append(seg,
+        V.h('div', { class: 'vis-row' },
+            V.btn('Notes example: buyer, RM53', () => { seg.querySelectorAll('button')[0].click(); L14.setSlider(sl.K, 50); L14.setSlider(sl.P, 5); L14.setSlider(sl.S, 53); }),
+            V.btn('Break-even', () => { L14.setSlider(sl.S, defs[kind].type === 'call' ? K + P : K - P); }),
+            V.btn('Share rises to RM75', () => { L14.setSlider(sl.S, 75); }),
+            V.btn('Share falls to RM25', () => { L14.setSlider(sl.S, 25); })),
+        V.h('div', { class: 'vis-row' },
+            mk('K', 'strike price K', 30, 70, 1, K, v => 'RM' + v, v => { K = v; }),
+            mk('P', 'premium per share', 0.5, 15, 0.5, P, v => 'RM' + v.toFixed(2), v => { P = v; }),
+            mk('S', 'share price at expiry', 10, 90, 0.5, S, v => 'RM' + v, v => { S = v; })),
+        svg, read);
+    function draw() {
+        V.clear(svg);
+        const d = defs[kind], call = d.type === 'call', sgn = d.side;
+        const pay = s => (call ? Math.max(s - K, 0) : Math.max(K - s, 0));
+        const profit = s => sgn * (pay(s) - P) * M;
+        const payoff = s => sgn * pay(s) * M;
+        const be = call ? K + P : K - P;
+        L14.plot(svg, {
+            xr: [10, 90], kinks: [K], xfmt: t => 'RM' + t, xlabel: 'share price at expiry', ylabel: 'RM per contract (100 shares)',
+            series: [{ f: payoff, color: '#94a3b8', width: 2.2, dash: '6 5' }, { f: profit, color: d.col, width: 3.4 }],
+            vlines: [{ x: K, label: 'strike RM' + K, color: '#64748b' }],
+            marks: [{ x: be, y: 0, label: 'break-even RM' + L14.num(be, L14.dec(be)), color: V.C.ink, dy: sgn > 0 ? 18 : -16 }],
+            dot: { x: S, f: profit, color: V.C.amber, label: L14.rm(profit(S)) },
+            legend: [{ label: 'profit (after premium)', color: d.col, width: 3.4 }, { label: sgn > 0 ? 'payoff (before premium)' : "writer's payoff (before premium)", color: '#94a3b8', width: 2.2, dash: '6 5' }]
+        });
+        const p = pay(S), per = sgn * (p - P), tot = per * M;
+        const word = p > 0 ? 'in the money' : (S === K ? 'at the money' : 'out of the money');
+        let html = `<b>${d.name}</b>: share at expiry $${L14.trm(S)}$, strike $${L14.trm(K)}$, premium $${L14.trm(P)}$ per share. The ${call ? 'call' : 'put'} is <b>${word}</b>.`;
+        html += `$$\\text{${sgn > 0 ? 'payoff of the option' : "holder's payoff"}} = \\max(${call ? `S_T-K` : `K-S_T`},0) = \\max(${call ? `${L14.tn(S)}-${L14.tn(K)}` : `${L14.tn(K)}-${L14.tn(S)}`},0) = ${L14.trm(p)}$$`;
+        if (sgn > 0) html += `$$\\text{profit} = (${L14.tn(p)} - ${L14.tn(P)}) \\times 100 = \\boxed{${L14.trm(tot)}}$$`;
+        else html += `$$\\text{writer's profit} = (${L14.tn(P)} - ${L14.tn(p)}) \\times 100 = \\boxed{${L14.trm(tot)}}$$`;
+        const maxlg = sgn > 0 ? (call ? 'unlimited' : `$(K-p)\\times100 = ${L14.trm((K - P) * M)}$`) : `$${L14.trm(P * M)}$ (the premium)`;
+        const maxls = sgn > 0 ? `$${L14.trm(P * M)}$ (the premium)` : (call ? 'theoretically unlimited' : `$(K-p)\\times100 = ${L14.trm((K - P) * M)}$`);
+        html += `Break-even at expiry: $${call ? 'K+c' : 'K-p'} = ${L14.trm(be)}$. Maximum gain: ${maxlg}. Maximum loss: ${maxls}. `;
+        if (sgn > 0 && p > 0 && tot < 0) html += 'It is in the money yet still loses money after the premium: moneyness is not profit. ';
+        html += sgn > 0 ? 'The matching writer has exactly the opposite option profit, before costs.' : 'The matching buyer has exactly the opposite option profit, before costs.';
+        V.math(read, html);
+    }
+    draw();
+};
+
+// ---------------------------------------------------------------- intrinsic value and time value
+ML_VIS.l14_value = function (root) {
+    let kind = 'call', K = 50, S = 53, P = 5;
+    const svg = V.svg(560, 300), read = V.h('p', { class: 'vis-readout' }), sl = {};
+    const seg = V.seg([['call', 'call'], ['put', 'put']], kind, v => { kind = v; draw(); });
+    const mk = (k, label, min, max, step, val, fmt, set) => (sl[k] = V.slider(label, min, max, step, val, v => { set(v); draw(); }, fmt));
+    root.append(seg,
+        V.h('div', { class: 'vis-row' },
+            V.btn('Notes: RM53 share, RM50 call, RM5', () => { kind = 'call'; seg.querySelectorAll('button')[0].click(); L14.setSlider(sl.K, 50); L14.setSlider(sl.S, 53); L14.setSlider(sl.P, 5); }),
+            V.btn('Subjective: RM52 share, RM55 put, RM4', () => { seg.querySelectorAll('button')[1].click(); L14.setSlider(sl.K, 55); L14.setSlider(sl.S, 52); L14.setSlider(sl.P, 4); })),
+        V.h('div', { class: 'vis-row' },
+            mk('S', 'share price now', 20, 80, 1, S, v => 'RM' + v, v => { S = v; }),
+            mk('K', 'strike price', 35, 65, 1, K, v => 'RM' + v, v => { K = v; }),
+            mk('P', 'option premium', 0, 20, 0.1, P, v => 'RM' + v.toFixed(2), v => { P = v; })),
+        svg, read);
+    function draw() {
+        V.clear(svg);
+        const call = kind === 'call', intr = s => (call ? Math.max(s - K, 0) : Math.max(K - s, 0));
+        const I = intr(S), T = P - I;
+        const lo = 15, hi = 85, top = 30;
+        const x0 = 74, x1 = 536, y0 = 262, y1 = 30;
+        const c = V.chart(svg, { x0, x1, y0, y1, X: [lo, hi], Y: [0, top], xticks: [20, 30, 40, 50, 60, 70, 80], yticks: [0, 10, 20, 30], fx: t => 'RM' + t, fy: t => 'RM' + t, xlabel: 'share price', ylabel: 'value per share', seed: 14 });
+        // intrinsic value line, clipped at the top of the chart
+        const pts = call ? [[lo, 0], [K, 0], [Math.min(hi, K + top), Math.min(top, hi - K)]] : [[Math.max(lo, K - top), Math.min(top, K - lo)], [K, 0], [hi, 0]];
+        V.path(svg, pts.map(([x, y]) => [c.X(x), c.Y(y)]), V.C.indigo, 3.4);
+        svg.append(V.s('line', { x1: c.X(K), x2: c.X(K), y1: y0, y2: y1, stroke: '#94a3b8', 'stroke-width': 1.3, 'stroke-dasharray': '5 5' }));
+        V.text(svg, c.X(K), y1 - 12, 'strike RM' + K, { size: 12, weight: 700, color: '#64748b' });
+        // time value bar between the intrinsic value and the premium, at the current share price
+        const yi = c.Y(Math.min(I, top)), yp = c.Y(Math.min(Math.max(P, 0), top));
+        if (T > 0.005) {
+            svg.append(V.s('rect', { x: c.X(S) - 9, y: yp, width: 18, height: Math.max(1, yi - yp), fill: V.C.amberS, stroke: V.C.amber, 'stroke-width': 1.4 }));
+        }
+        if (I > 0) svg.append(V.s('rect', { x: c.X(S) - 9, y: yi, width: 18, height: Math.max(1, c.Y(0) - yi), fill: V.C.indigoS, stroke: V.C.indigo, 'stroke-width': 1.4 }));
+        V.dot(svg, c.X(S), yp, V.C.amber, 6, '#fff');
+        const right = call ? c.X(S) < 230 : c.X(S) < 400;
+        const lx = c.X(S) + (right ? 18 : -18), anc = right ? 'start' : 'end';
+        V.text(svg, lx, yp - 2, 'premium ' + L14.rm(P), { size: 13, weight: 700, anchor: anc, color: V.C.amber });
+        if (I > 0) V.text(svg, lx, (c.Y(0) + yi) / 2 + 14, 'intrinsic ' + L14.rm(I), { size: 13, weight: 700, anchor: anc, color: V.C.indigo });
+        if (T > 0.005 && yi - yp > 22) V.text(svg, lx, (yi + yp) / 2 + 8, 'time ' + L14.rm(T), { size: 12, anchor: anc, color: '#92400e' });
+        V.text(svg, call ? c.X(K + 14) : c.X(K - 14), c.Y(4), 'intrinsic value line', { size: 12, anchor: call ? 'start' : 'end', color: V.C.indigo });
+        const itm = call ? S > K : S < K, atm = S === K;
+        const tag = atm ? 'at the money' : itm ? 'in the money' : 'out of the money';
+        const cls = atm ? 'even' : itm ? 'good' : 'bad';
+        let html = `<span class="vis-verdict ${cls}">${tag}</span> ${call ? 'A call is in the money when $S &gt; K$' : 'A put is in the money when $S &lt; K$'}: here $S = ${L14.trm(S)}$ and $K = ${L14.trm(K)}$.`;
+        html += `$$\\text{intrinsic value} = \\max(${call ? `S-K` : `K-S`},0) = \\max(${call ? `${L14.tn(S)}-${L14.tn(K)}` : `${L14.tn(K)}-${L14.tn(S)}`},0) = ${L14.trm(I)}$$`;
+        html += `$$\\text{time value} = \\text{premium} - \\text{intrinsic value} = ${L14.tn(P)} - ${L14.tn(I)} = \\boxed{${L14.trm(T)}}$$`;
+        if (T < -0.005) html += 'The premium is below the intrinsic value. A quoted option does not normally trade like that, so treat it as a data-entry check: time value is not negative. ';
+        else if (I === 0) html += 'At- or out-of-the-money options have <b>zero</b> intrinsic value (never negative), so the whole premium is time value. ';
+        else html += `Of the $${L14.trm(P)}$ premium, $${L14.trm(I)}$ is what exercising would earn today and $${L14.trm(T)}$ is the price of the chance of more. `;
+        const be = call ? K + P : K - P;
+        html += `If you bought it at this premium, its expiry break-even is $${L14.trm(be)}$, because the premium has to be recovered as well. Per contract: intrinsic $${L14.trm(I * 100)}$, time value $${L14.trm(Math.max(T, 0) * 100)}$.`;
+        V.math(read, html);
+    }
+    draw();
+};
+
+// ---------------------------------------------------------------- leverage
+ML_VIS.l14_leverage = function (root) {
+    let S0 = 50, K = 50, P = 5, ST = 75;
+    const svg = V.svg(560, 250), read = V.h('p', { class: 'vis-readout' }), sl = {};
+    const mk = (k, label, min, max, step, val, fmt, set) => (sl[k] = V.slider(label, min, max, step, val, v => { set(v); draw(); }, fmt));
+    const preset = (a, b, c, d) => () => { L14.setSlider(sl.S0, a); L14.setSlider(sl.K, b); L14.setSlider(sl.P, c); L14.setSlider(sl.ST, d); };
+    root.append(
+        V.h('div', { class: 'vis-row' },
+            V.btn('Share rises to RM75', preset(50, 50, 5, 75)), V.btn('Share falls to RM45', preset(50, 50, 5, 45)),
+            V.btn('Small rise to RM53', preset(50, 50, 5, 53)), V.btn('Break-even RM55', preset(50, 50, 5, 55))),
+        V.h('div', { class: 'vis-row' },
+            mk('S0', 'share price today', 20, 100, 1, S0, v => 'RM' + v, v => { S0 = v; }),
+            mk('K', 'call strike', 20, 100, 1, K, v => 'RM' + v, v => { K = v; }),
+            mk('P', 'call premium', 0.5, 15, 0.25, P, v => 'RM' + v.toFixed(2), v => { P = v; }),
+            mk('ST', 'share price at expiry', 0, 120, 1, ST, v => 'RM' + v, v => { ST = v; })),
+        svg, read);
+    function draw() {
+        V.clear(svg);
+        const M = 100, stockCost = S0 * M, callCost = P * M;
+        const stockPL = (ST - S0) * M, callPay = Math.max(ST - K, 0) * M, callPL = callPay - callCost;
+        const rs = stockPL / stockCost, rc = callPL / callCost;
+        const mx = Math.max(Math.abs(rs), Math.abs(rc), 0.1), W = 170;
+        const cx = 330, sc = W / mx;
+        const rows = [['100 shares', rs, V.C.sky, 70, stockPL, stockCost], ['one call', rc, V.C.green, 150, callPL, callCost]];
+        svg.append(V.s('line', { x1: cx, x2: cx, y1: 30, y2: 210, stroke: '#64748b', 'stroke-width': 1.6 }));
+        V.text(svg, cx, 18, 'return on the money put in', { size: 13, color: '#475569' });
+        rows.forEach(([lab, r, col, y, pl, cost]) => {
+            const w = Math.max(2, Math.abs(r) * sc), x = r >= 0 ? cx : cx - w;
+            svg.append(V.s('rect', { x, y: y - 22, width: w, height: 44, rx: 5, fill: r >= 0 ? col : V.C.rose, opacity: 0.85 }));
+            V.text(svg, 12, y - 8, lab, { size: 14, weight: 700, anchor: 'start', color: col });
+            V.text(svg, 12, y + 10, 'put in ' + L14.rm(cost, 0), { size: 12, anchor: 'start', color: '#64748b' });
+            const lblX = r >= 0 ? x + w + 8 : x - 8, anc = r >= 0 ? 'start' : 'end';
+            const fitsRight = r >= 0 && lblX + 150 < 560, fitsLeft = r < 0 && lblX - 150 > 80;
+            const txt = L14.pc(r * 100, 1) + '  (' + L14.rm(pl, 0) + ')';
+            if ((r >= 0 && fitsRight) || (r < 0 && fitsLeft)) V.text(svg, lblX, y, txt, { size: 14, weight: 700, anchor: anc, color: r >= 0 ? V.C.green : V.C.rose });
+            else V.text(svg, r >= 0 ? x + w - 8 : x + 8, y, txt, { size: 13, weight: 700, anchor: r >= 0 ? 'end' : 'start', color: '#fff' });
+        });
+        V.text(svg, 280, 232, `Call break-even at expiry: RM${L14.num(K + P, L14.dec(K + P))}   |   share break-even: RM${S0}`, { size: 13, color: '#475569' });
+        let html = `Shares: cost $100 \\times ${L14.tn(S0)} = ${L14.trm(stockCost)}$; profit $100(${L14.tn(ST)} - ${L14.tn(S0)}) = ${L14.trm(stockPL)}$, a return of $\\dfrac{${L14.tn(stockPL)}}{${L14.tn(stockCost)}} = \\boxed{${L14.tpc(rs * 100, 1)}}$.`;
+        html += `$$\\text{Call: premium } ${L14.trm(callCost)}, \\ \\text{payoff } ${L14.trm(callPay)}, \\ \\text{profit } ${L14.trm(callPL)}, \\ \\text{return } \\dfrac{${L14.tn(callPL)}}{${L14.tn(callCost)}} = \\boxed{${L14.tpc(rc * 100, 1)}}$$`;
+        if (ST <= K) html += `The call expires with no value: the buyer loses <b>$100\\%$ of the premium</b>, ${rs < 0 ? `while the shares lose $${L14.tpc(Math.abs(rs) * 100, 1)}$ of what was put in` : 'while the shares are not down'}.`;
+        else if (callPL < 0) html += `The call is in the money by $${L14.trm(ST - K)}$ but that does not recover the $${L14.trm(P)}$ premium: leverage did not rescue a small move.`;
+        else html += `The smaller outlay makes the same move a larger percentage. The call also needs the price above $${L14.trm(K + P)}$ to profit, and the holder gets no dividends or votes.`;
+        V.math(read, html);
+    }
+    draw();
+};
+
+// ---------------------------------------------------------------- stock plus option strategies
+ML_VIS.l14_hedge = function (root) {
+    let kind = 'pp', S0 = 50, K = 45, P = 2, ST = 60;
+    const M = 100, svg = V.svg(560, 310), read = V.h('p', { class: 'vis-readout' }), sl = {};
+    const defs = {
+        pp: { name: 'protective put (long shares + long put)', col: V.C.green, K: 45, P: 2, ST: 60 },
+        cc: { name: 'covered call (long shares + written call)', col: V.C.amber, K: 55, P: 2, ST: 70 },
+        sc: { name: 'short shares + long call', col: V.C.violet, K: 55, P: 2, ST: 70 }
+    };
+    const seg = V.seg([['pp', 'protective put'], ['cc', 'covered call'], ['sc', 'short shares + long call']], kind, v => {
+        kind = v; K = defs[v].K; P = defs[v].P; ST = defs[v].ST;
+        L14.setSlider(sl.K, K); L14.setSlider(sl.P, P); L14.setSlider(sl.ST, ST);
+    });
+    const mk = (k, label, min, max, step, val, fmt, set) => (sl[k] = V.slider(label, min, max, step, val, v => { set(v); draw(); }, fmt));
+    root.append(seg,
+        V.h('div', { class: 'vis-row' },
+            mk('S0', 'share price when the position is opened', 20, 100, 1, S0, v => 'RM' + v, v => { S0 = v; }),
+            mk('K', 'option strike', 20, 120, 1, K, v => 'RM' + v, v => { K = v; }),
+            mk('P', 'option premium', 0.5, 12, 0.25, P, v => 'RM' + v.toFixed(2), v => { P = v; }),
+            mk('ST', 'share price at expiry', 0, 130, 1, ST, v => 'RM' + v, v => { ST = v; })),
+        svg, read);
+    function parts(s) {
+        if (kind === 'pp') return { stock: (s - S0) * M, opt: Math.max(K - s, 0) * M, prem: -P * M };
+        if (kind === 'cc') return { stock: (s - S0) * M, opt: -Math.max(s - K, 0) * M, prem: P * M };
+        return { stock: (S0 - s) * M, opt: Math.max(s - K, 0) * M, prem: -P * M };
+    }
+    const total = s => { const p = parts(s); return p.stock + p.opt + p.prem; };
+    function draw() {
+        V.clear(svg);
+        const d = defs[kind], lo = Math.max(0, S0 - 35), hi = S0 + 35;
+        const stockOnly = s => (kind === 'sc' ? (S0 - s) * M : (s - S0) * M);
+        L14.plot(svg, {
+            xr: [lo, hi], kinks: [K], xfmt: t => 'RM' + t, xlabel: 'share price at expiry', ylabel: 'total profit (RM, 100 shares)',
+            series: [{ f: stockOnly, color: '#94a3b8', width: 2.2, dash: '6 5' }, { f: total, color: d.col, width: 3.4 }],
+            vlines: [{ x: K, label: 'strike RM' + K, color: '#64748b', anchor: K <= S0 ? 'end' : 'start', dx: K <= S0 ? -4 : 4 }, { x: S0, label: 'start RM' + S0, color: '#94a3b8', anchor: K <= S0 ? 'start' : 'end', dx: K <= S0 ? 4 : -4 }],
+            dot: { x: ST, f: total, color: V.C.ink, label: L14.rm(total(ST)) },
+            legend: [{ label: d.name.split(' (')[0], color: d.col, width: 3.4 }, { label: kind === 'sc' ? 'short shares alone' : 'shares alone', color: '#94a3b8', width: 2.2, dash: '6 5' }]
+        });
+        const p = parts(ST), t = p.stock + p.opt + p.prem;
+        const f = x => L14.trm(x);
+        let html = `<b>${d.name}</b>, one contract on $100$ shares, opened at $${f(S0)}$, expiry price $${f(ST)}$.`;
+        html += `$$\\begin{aligned} \\text{${kind === 'sc' ? 'short-share' : 'share'} profit} &= ${f(p.stock)} \\\\ \\text{option payoff} &= ${f(p.opt)} \\\\ \\text{premium ${kind === 'cc' ? 'received' : 'paid'}} &= ${f(p.prem)} \\\\ \\text{total} &= \\boxed{${f(t)}} \\end{aligned}$$`;
+        let lim;
+        if (kind === 'pp') {
+            const floor = (K - S0 - P) * M;
+            lim = floor < 0 ? `Floor: for any expiry price at or below $${f(K)}$ the total is $(K - S_0 - p) \\times 100 = ${f(floor)}$, so the <b>maximum loss</b> is $${f(-floor)}$. Upside is unlimited, less the premium.`
+                : `With the strike above the purchase price the position locks in a profit of at least $${f(floor)}$ at expiry; the premium is the cost of that floor.`;
+        } else if (kind === 'cc') {
+            const mxp = (K - S0 + P) * M, be = S0 - P;
+            lim = `Maximum profit $(K - S_0 + c) \\times 100 = ${f(mxp)}$ at any price at or above $${f(K)}$. ${K >= be ? `Break-even $S_0 - c = ${f(be)}$.` : `The strike is below $S_0 - c = ${f(be)}$, so the position loses at every expiry price: there is no break-even.`} If the share fell to zero the loss would be $${f(-(P - S0) * M)}$: the premium is only a small cushion and the shares are <b>not</b> protected.`;
+        } else {
+            const worst = (S0 - K - P) * M;
+            lim = `Ceiling: for any expiry price at or above $${f(K)}$ the total is $(S_0 - K - c) \\times 100 = ${f(worst)}$, so the loss is capped at $${f(Math.max(-worst, 0))}$ for the matched quantity. Borrowing, dividends and financing are ignored here.`;
+        }
+        V.math(read, html + lim);
+    }
+    draw();
+};
+
+// ---------------------------------------------------------------- index put hedge
+ML_VIS.l14_index = function (root) {
+    let V0 = 100000, I0 = 1000, K = 950, PP = 20, N = 10, MU = 10, IT = 900;
+    const svg = V.svg(560, 312), read = V.h('p', { class: 'vis-readout' }), sl = {};
+    const mk = (k, label, min, max, step, val, fmt, set) => (sl[k] = V.slider(label, min, max, step, val, v => { set(v); draw(); }, fmt));
+    root.append(
+        V.h('div', { class: 'vis-row' },
+            V.btn('Subjective Q6: index at 900', () => { L14.setSlider(sl.V0, 100000); L14.setSlider(sl.I0, 1000); L14.setSlider(sl.K, 950); L14.setSlider(sl.PP, 20); L14.setSlider(sl.N, 10); L14.setSlider(sl.MU, 10); L14.setSlider(sl.IT, 900); }),
+            V.btn('Index rises to 1,100', () => L14.setSlider(sl.IT, 1100)), V.btn('No contracts', () => L14.setSlider(sl.N, 0))),
+        V.h('div', { class: 'vis-row' },
+            mk('V0', 'portfolio value', 20000, 500000, 10000, V0, v => 'RM' + L14.num(v, 0), v => { V0 = v; }),
+            mk('I0', 'index level now', 500, 2000, 10, I0, v => L14.num(v, 0), v => { I0 = v; syncIT(); }),
+            mk('K', 'put strike (index points)', 500, 2000, 10, K, v => L14.num(v, 0), v => { K = v; }),
+            mk('PP', 'premium (index points)', 0, 80, 1, PP, v => v + ' pts', v => { PP = v; })),
+        V.h('div', { class: 'vis-row' },
+            mk('N', 'contracts bought', 0, 40, 1, N, v => v, v => { N = v; }),
+            mk('MU', 'multiplier (RM per point)', 1, 100, 1, MU, v => 'RM' + v, v => { MU = v; }),
+            mk('IT', 'index level at expiry', 500, 1400, 10, IT, v => L14.num(v, 0), v => { IT = v; })),
+        svg, read);
+    // the expiry slider follows the chart's range (0.5 to 1.4 times the index level now)
+    function syncIT() {
+        const lo = Math.max(100, Math.round(I0 * 0.5 / 10) * 10), hi = Math.round(I0 * 1.4 / 10) * 10;
+        sl.IT.input.min = lo; sl.IT.input.max = hi;
+        const v = Math.min(hi, Math.max(lo, IT));
+        if (v !== IT || sl.IT.input.value !== String(v)) L14.setSlider(sl.IT, v);
+    }
+    function draw() {
+        V.clear(svg);
+        const cost = N * PP * MU, port = x => V0 * x / I0, pay = x => N * Math.max(K - x, 0) * MU;
+        const hedged = x => port(x) + pay(x), unh = x => port(x);
+        const lo = Math.max(100, I0 * 0.5), hi = I0 * 1.4;
+        // chart of ending wealth (profit relative to the initial value plus the option cost)
+        const prof = x => hedged(x) - (V0 + cost), prof0 = x => unh(x) - V0;
+        L14.plot(svg, {
+            xr: [lo, hi], kinks: [K], xfmt: t => L14.num(t, 0), xlabel: 'index level at expiry', ylabel: 'profit (RM)',
+            series: [{ f: prof0, color: '#94a3b8', width: 2.2, dash: '6 5' }, { f: prof, color: V.C.green, width: 3.4 }],
+            vlines: [{ x: K, label: 'strike ' + L14.num(K, 0), color: '#64748b' }],
+            dot: { x: IT, f: prof, color: V.C.ink, label: L14.rm(prof(IT), 0) },
+            legend: [{ label: 'portfolio with index puts (after premium)', color: V.C.green, width: 3.4 }, { label: 'portfolio alone', color: '#94a3b8', width: 2.2, dash: '6 5' }],
+            yfmt: t => (t === 0 ? 'RM0' : (t < 0 ? '-' : '') + 'RM' + L14.num(Math.abs(t) / 1000, 1).replace(/\.0$/, '') + 'k')
+        });
+        const pf = port(IT), po = pay(IT), end = pf + po, profit = end - (V0 + cost), unhP = pf - V0;
+        const cover = V0 / (I0 * MU);
+        let html = `Premium $= ${N} \\times ${L14.tn(PP)} \\times ${L14.trm(MU)} = ${L14.trm(cost)}$. Index puts pay $${N} \\times \\max(${L14.tn(K)} - ${L14.tn(IT)},0) \\times ${L14.trm(MU)} = ${L14.trm(po)}$.`;
+        html += `$$\\begin{aligned} \\text{portfolio at expiry} &= ${L14.trm(V0)} \\times \\dfrac{${L14.tn(IT)}}{${L14.tn(I0)}} = ${L14.trm(pf)} \\\\ \\text{hedged ending value} &= ${L14.trm(pf)} + ${L14.trm(po)} = ${L14.trm(end)} \\\\ \\text{profit} &= ${L14.trm(end)} - (${L14.trm(V0)} + ${L14.trm(cost)}) = \\boxed{${L14.trm(profit)}} \\end{aligned}$$`;
+        html += `Unhedged, the portfolio alone shows $${L14.trm(unhP)}$. `;
+        html += `One contract is worth $${L14.tn(I0)} \\times ${L14.trm(MU)} = ${L14.trm(I0 * MU)}$ of index exposure, so about $${L14.tn(cover, Math.abs(cover - Math.round(cover)) < 0.05 ? 0 : 1)}$ contracts cover this portfolio. `;
+        html += 'The put protects only the part of the fall below the strike and costs the premium; a portfolio that differs from the index, or mismatched size, dates or terms, leaves some risk unhedged.';
+        V.math(read, html);
+    }
+    draw();
+};
+
+// ---------------------------------------------------------------- bull call spread and long straddle
+ML_VIS.l14_spread = function (root) {
+    let kind = 'bull', K1 = 50, gap = 10, cl = 6, cs = 2, K = 50, cp = 3, pp = 2, ST = 70;
+    const M = 100, svg = V.svg(560, 310), read = V.h('p', { class: 'vis-readout' }), sl = {};
+    const bullRow = V.h('div', { class: 'vis-row' }), stradRow = V.h('div', { class: 'vis-row' });
+    const mk = (k, label, min, max, step, val, fmt, set) => (sl[k] = V.slider(label, min, max, step, val, v => { set(v); draw(); }, fmt));
+    const seg = V.seg([['bull', 'bull call spread'], ['strad', 'long straddle']], kind, v => {
+        kind = v; bullRow.style.display = v === 'bull' ? '' : 'none'; stradRow.style.display = v === 'bull' ? 'none' : '';
+        L14.setSlider(sl.ST, v === 'bull' ? 70 : 60);
+    });
+    bullRow.append(
+        mk('K1', 'strike of the call bought', 30, 70, 1, K1, v => 'RM' + v, v => { K1 = v; }),
+        mk('gap', 'higher strike is above by', 5, 30, 1, gap, v => 'RM' + v, v => { gap = v; }),
+        mk('cl', 'premium paid', 1, 15, 0.5, cl, v => 'RM' + v.toFixed(2), v => { cl = v; if (cs >= cl) L14.setSlider(sl.cs, cl - 0.5); }),
+        mk('cs', 'premium received (below the premium paid)', 0.5, 12, 0.5, cs, v => 'RM' + v.toFixed(2), v => { cs = Math.min(v, cl - 0.5); if (cs !== v) L14.setSlider(sl.cs, cs); }));
+    stradRow.append(
+        mk('K', 'strike (call and put)', 30, 70, 1, K, v => 'RM' + v, v => { K = v; }),
+        mk('cp', 'call premium', 0.5, 10, 0.5, cp, v => 'RM' + v.toFixed(2), v => { cp = v; }),
+        mk('pp', 'put premium', 0.5, 10, 0.5, pp, v => 'RM' + v.toFixed(2), v => { pp = v; }));
+    stradRow.style.display = 'none';
+    root.append(seg, bullRow, stradRow,
+        V.h('div', { class: 'vis-row' }, mk('ST', 'share price at expiry', 10, 100, 1, ST, v => 'RM' + v, v => { ST = v; })),
+        svg, read);
+    function draw() {
+        V.clear(svg);
+        if (kind === 'bull') {
+            const K2 = K1 + gap, deb = cl - cs;
+            const prof = s => (Math.max(s - K1, 0) - Math.max(s - K2, 0) - deb) * M, longc = s => (Math.max(s - K1, 0) - cl) * M;
+            const be = K1 + deb, mxp = (gap - deb) * M, mxl = deb * M;
+            L14.plot(svg, {
+                xr: [10, 100], kinks: [K1, K2], xfmt: t => 'RM' + t, xlabel: 'share price at expiry', ylabel: 'RM per spread',
+                series: [{ f: longc, color: '#94a3b8', width: 2.2, dash: '6 5' }, { f: prof, color: V.C.green, width: 3.4 }],
+                vlines: [{ x: K1, label: 'K1 ' + K1, color: '#64748b' }, { x: K2, label: 'K2 ' + K2, color: '#64748b' }],
+                marks: [{ x: be, y: 0, label: 'BE ' + L14.num(be, L14.dec(be)), color: V.C.ink, dy: 18 }],
+                dot: { x: ST, f: prof, color: V.C.amber, label: L14.rm(prof(ST), 0) },
+                legend: [{ label: 'bull call spread', color: V.C.green, width: 3.4 }, { label: 'the long call alone', color: '#94a3b8', width: 2.2, dash: '6 5' }]
+            });
+            const l1 = Math.max(ST - K1, 0), l2 = Math.max(ST - K2, 0), t = prof(ST);
+            let html = `Buy the $${L14.trm(K1)}$ call for $${L14.trm(cl)}$, write the $${L14.trm(K2)}$ call for $${L14.trm(cs)}$: net debit $${L14.tn(cl)} - ${L14.tn(cs)} = ${L14.trm(deb)}$ per share, $${L14.trm(deb * M)}$ per contract.`;
+            html += `$$\\text{profit per share} = ${L14.tn(l1)} - ${L14.tn(l2)} - ${L14.tn(deb)} = ${L14.trm(l1 - l2 - deb)}, \\quad \\text{per contract } \\boxed{${L14.trm(t)}}$$`;
+            html += `Maximum loss $${L14.trm(mxl)}$ (at or below $${L14.trm(K1)}$). `;
+            if (deb >= gap) html += '<b>With these premiums the debit is at least the strike gap, so the spread cannot make money at expiry: it has no break-even.</b>';
+            else html += `Maximum profit $(${L14.tn(gap)} - ${L14.tn(deb)}) \\times 100 = ${L14.trm(mxp)}$ (at or above $${L14.trm(K2)}$); break-even $K_1 + \\text{debit} = ${L14.trm(be)}$. Selling the higher-strike call lowers the cost but caps the gain.`;
+            V.math(read, html);
+        } else {
+            const tot = cp + pp, prof = s => (Math.max(s - K, 0) + Math.max(K - s, 0) - tot) * M;
+            L14.plot(svg, {
+                xr: [10, 100], kinks: [K], xfmt: t => 'RM' + t, xlabel: 'share price at expiry', ylabel: 'RM per straddle',
+                series: [{ f: prof, color: V.C.violet, width: 3.4 }],
+                vlines: [{ x: K, label: 'strike ' + K, color: '#64748b' }],
+                marks: [{ x: K - tot, y: 0, label: 'BE ' + L14.num(K - tot, L14.dec(K - tot)), color: V.C.ink, dy: -16 }, { x: K + tot, y: 0, label: 'BE ' + L14.num(K + tot, L14.dec(K + tot)), color: V.C.ink, dy: -16 }],
+                dot: { x: ST, f: prof, color: V.C.amber, label: L14.rm(prof(ST), 0) }
+            });
+            const cpay = Math.max(ST - K, 0), ppay = Math.max(K - ST, 0), t = prof(ST);
+            let html = `Buy a call ($${L14.trm(cp)}$) and a put ($${L14.trm(pp)}$) at strike $${L14.trm(K)}$: total debit $${L14.tn(cp)} + ${L14.tn(pp)} = ${L14.trm(tot)}$ per share, $${L14.trm(tot * M)}$ per contract.`;
+            html += `$$\\text{profit per share} = ${L14.tn(cpay)} + ${L14.tn(ppay)} - ${L14.tn(tot)} = ${L14.trm(cpay + ppay - tot)}, \\quad \\text{per contract } \\boxed{${L14.trm(t)}}$$`;
+            html += `Break-evens $K \\pm (c + p) = ${L14.trm(K - tot)}$ and $${L14.trm(K + tot)}$. Worst case: the share ends exactly at $${L14.trm(K)}$ and both options expire worthless, losing $${L14.trm(tot * M)}$. The move must be large enough to recover <b>both</b> premiums.`;
+            V.math(read, html);
+        }
     }
     draw();
 };

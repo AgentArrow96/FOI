@@ -1,4 +1,4 @@
-window.CHAPTER_COUNT = 12;
+window.CHAPTER_IDS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14];
 
         function switchConcept(group, panel, button) {
             document.querySelectorAll('[id^="' + group + '-"]').forEach(x => x.classList.remove('active'));
@@ -105,6 +105,34 @@ window.CHAPTER_COUNT = 12;
             if (base && base.closest('.ff-recall-on')) base.classList.toggle('shown');
         });
         document.addEventListener('input', e => { if (e.target.id === 'ff-search') ffApply(); });
+
+        // Tutorial Questions: chapter and type filters, and links from chapter pages
+        function tutApply() {
+            const sec = document.getElementById('sec-tutorials'); if (!sec) return;
+            const ch = (sec.querySelector('[data-tut-chip].on') || {}).dataset?.tutChip || 'all';
+            const ty = (sec.querySelector('[data-tut-type].on') || {}).dataset?.tutType || 'all';
+            let shown = 0;
+            sec.querySelectorAll('.tut-q').forEach(q => {
+                const hit = (ch === 'all' || q.dataset.tutCh.split(' ').includes(ch)) && (ty === 'all' || q.dataset.tutT === ty);
+                q.hidden = !hit; if (hit) shown++;
+            });
+            sec.querySelectorAll('.tut-group').forEach(g => { g.hidden = !g.querySelector('.tut-q:not([hidden])'); });
+            sec.querySelector('.tut-empty').hidden = shown > 0;
+        }
+        function tutSet(attr, value) {
+            const sec = document.getElementById('sec-tutorials'); if (!sec) return;
+            sec.querySelectorAll('[' + attr + ']').forEach(b => b.classList.toggle('on', b.getAttribute(attr) === value));
+            tutApply();
+        }
+        document.addEventListener('click', e => {
+            const c = e.target.closest('[data-tut-chip]'); if (c) return tutSet('data-tut-chip', c.dataset.tutChip);
+            const t = e.target.closest('[data-tut-type]'); if (t) return tutSet('data-tut-type', t.dataset.tutType);
+            const o = e.target.closest('[data-tut-open]');
+            if (o) {
+                const n = o.dataset.tutOpen;
+                Promise.resolve(navTo('tutorials')).then(() => { tutSet('data-tut-type', 'all'); tutSet('data-tut-chip', n); });
+            }
+        });
         document.addEventListener('change', e => { if (e.target.id === 'quiz-mode') updateModeNote(); });
 
         // Diagrams
@@ -211,7 +239,7 @@ window.CHAPTER_COUNT = 12;
         function resetProgress() { if (!confirm('Reset learned status and best quiz scores?')) return; try { localStorage.removeItem('foiStudyProgress'); } catch (e) { } updateProgressDashboard(); }
         function updateProgressDashboard() {
             const p = getProgress();
-            for (let n = 1; n <= (window.CHAPTER_COUNT || 5); n++) {
+            for (const n of (window.CHAPTER_IDS || [1, 2, 3, 4, 5])) {
                 const x = p[n] || { learned: false, best: 0 }; const pct = Math.round(((x.learned ? 1 : 0) + (x.best >= 80 ? 1 : 0)) / 2 * 100);
                 const status = document.getElementById('status-m' + n), best = document.getElementById('best-m' + n), fill = document.getElementById('progress-m' + n);
                 if (status) status.textContent = x.learned ? 'Learned' : 'Not learned'; if (best) best.textContent = 'Best: ' + (x.best || 0) + '%'; if (fill) fill.style.width = pct + '%';
