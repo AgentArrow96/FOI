@@ -267,13 +267,18 @@ window.CHAPTER_IDS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14];
             const mod = document.getElementById('quiz-module').value, count = document.getElementById('quiz-count').value, order = document.getElementById('quiz-order').value;
             if (!custom) quizMode = document.getElementById('quiz-mode').value;
             const hard = quizMode !== 'standard';
-            let pool = custom ? [...custom] : (hard ? DIFFICULT_BANK : QUESTION_BANK).filter(q => (mod === 'all' || String(q.module) === mod) && (quizMode !== 'extensions' || q.ext));
+            // A scope option such as Test 2 lists its chapters in data-chapters
+            const modOpt = document.getElementById('quiz-module').selectedOptions[0], scope = modOpt && modOpt.dataset.chapters ? modOpt.dataset.chapters.split(' ') : null;
+            const inScope = q => scope ? scope.includes(String(q.module)) : (mod === 'all' || String(q.module) === mod);
+            let pool = custom ? [...custom] : (hard ? DIFFICULT_BANK : QUESTION_BANK).filter(q => inScope(q) && (quizMode !== 'extensions' || q.ext));
             if (hard) {
                 if (count !== 'all' && !custom) pool = shuffle(pool).slice(0, Number(count));
                 pool = bloomOrder(pool, order === 'shuffle' || !!custom);
             } else {
-                if (order === 'shuffle' || custom) pool = shuffle(pool); else pool.sort((a, b) => a.module - b.module || a.number - b.number);
+                if (order === 'shuffle' || custom || (scope && count !== 'all')) pool = shuffle(pool);
                 if (count !== 'all' && !custom) pool = pool.slice(0, Number(count));
+                // Multi-chapter scope in chapter order: sample across all its chapters first, then sort
+                if (order !== 'shuffle' && !custom) pool.sort((a, b) => a.module - b.module || a.number - b.number);
             }
             quizQuestions = pool; quizIndex = 0; quizCorrect = 0; quizAnswered = 0; currentMistakes = []; quizLog = []; selectedAnswers = new Set();
             document.getElementById('retry-btn').style.display = 'none'; updateQuizStats(); renderQuestion();
